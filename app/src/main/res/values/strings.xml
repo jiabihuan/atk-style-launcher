@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">MyTV Launcher</string>
+    <string name="accessibility_service_label">MyTV Launcher Home Service</string>
+    <string name="accessibility_service_summary">Optional fallback that returns to MyTV when the stock TV launcher appears.</string>
+    <string name="accessibility_service_description">MyTV Launcher Home Service is an optional fallback for Google TV devices that do not allow a third-party default Home app. It only listens for launcher window changes and opens MyTV Launcher when the stock TV launcher appears. It does not read screen content, type, click, record, or collect personal data.</string>
+</resources>

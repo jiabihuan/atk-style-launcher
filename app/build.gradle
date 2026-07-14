@@ -1,0 +1,41 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "com.mytvlauncher"
+    compileSdk 35
+
+    signingConfigs {
+        release {
+            if (project.hasProperty("MYTV_STORE_FILE")) {
+                storeFile file(project.property("MYTV_STORE_FILE"))
+                storePassword project.property("MYTV_STORE_PASSWORD")
+                keyAlias project.property("MYTV_KEY_ALIAS")
+                keyPassword project.property("MYTV_KEY_PASSWORD")
+            }
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.mytvlauncher"
+        minSdk 24
+        targetSdk 35
+        versionCode 60
+        versionName "1.5.36-open-source"
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
+}
