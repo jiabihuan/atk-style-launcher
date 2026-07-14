@@ -182,7 +182,7 @@ public class MainActivity extends Activity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_MENU || keyCode == KeyEvent.KEYCODE_SETTINGS) {
-            showSettings("Theme Mode");
+            showSettings("主题模式");
             return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -192,8 +192,8 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQ_HOME_ROLE) {
-            toast(isDefaultHomeLauncher() ? "MyTV Launcher is now the Home app." : "Home role was not granted by the system.");
-            showSettings("Controls");
+            toast(isDefaultHomeLauncher() ? "星河桌面已设为默认桌面。" : "系统未授予桌面权限。");
+            showSettings("控制");
             return;
         }
         if (resultCode != RESULT_OK || data == null || data.getData() == null) return;
@@ -205,12 +205,12 @@ public class MainActivity extends Activity {
         }
         if (requestCode == REQ_IMAGE) {
             prefs.edit().putString("bg_mode", "image").putString("bg_uri", uri.toString()).apply();
-            toast("Custom image selected");
-            showSettings("Theme Mode");
+            toast("已选择自定义图片");
+            showSettings("主题模式");
         } else if (requestCode == REQ_VIDEO) {
             prefs.edit().putString("bg_mode", "video").putString("bg_video_uri", uri.toString()).apply();
-            toast("Custom video selected");
-            showSettings("Theme Mode");
+            toast("已选择自定义视频");
+            showSettings("主题模式");
         }
     }
 
@@ -261,7 +261,7 @@ public class MainActivity extends Activity {
 
         if (!prefs.getBoolean("hide_app_titles", false)) {
             TextView title = new TextView(this);
-            title.setText("My apps");
+            title.setText("我的应用");
             title.setTextColor(Color.WHITE);
             title.setTextSize(24);
             title.setTypeface(Typeface.DEFAULT_BOLD);
@@ -369,7 +369,7 @@ public class MainActivity extends Activity {
         top.addView(googleSettingsButton, googleLp);
 
         View mytvSettings = imageIconChip(R.drawable.ic_mytv_settings, 28);
-        mytvSettings.setOnClickListener(v -> showSettings("Theme Mode"));
+        mytvSettings.setOnClickListener(v -> showSettings("主题模式"));
         LinearLayout.LayoutParams settingsLp = new LinearLayout.LayoutParams(dp(90), dp(50));
         settingsLp.rightMargin = dp(14);
         top.addView(mytvSettings, settingsLp);
@@ -405,7 +405,7 @@ public class MainActivity extends Activity {
         card.addView(copy, new LinearLayout.LayoutParams(dp(218), -1));
 
         TextView city = new TextView(this);
-        city.setText("Batu Pahat");
+        city.setText("北京");
         city.setTextColor(Color.argb(185, 255, 255, 255));
         city.setTextSize(16);
         city.setSingleLine(true);
@@ -420,13 +420,13 @@ public class MainActivity extends Activity {
         copy.addView(temp);
 
         TextView condition = new TextView(this);
-        condition.setText("Broken Clouds");
+        condition.setText("多云");
         condition.setTextColor(Color.argb(220, 255, 255, 255));
         condition.setTextSize(19);
         copy.addView(condition);
 
         ImageView weatherIcon = new ImageView(this);
-        weatherIcon.setImageResource(weatherIconResource("Broken Clouds"));
+        weatherIcon.setImageResource(weatherIconResource("多云"));
         weatherIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
         weatherIcon.setPadding(0, 0, 0, 0);
         LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(dp(172), dp(138));
@@ -465,14 +465,14 @@ public class MainActivity extends Activity {
         top.setGravity(Gravity.CENTER_VERTICAL);
         page.addView(top, new LinearLayout.LayoutParams(-1, dp(58)));
 
-        TextView back = chip("Back", false);
+        TextView back = chip("返回", false);
         back.setOnClickListener(v -> showHome());
         LinearLayout.LayoutParams backLp = new LinearLayout.LayoutParams(dp(112), dp(46));
         backLp.rightMargin = dp(18);
         top.addView(back, backLp);
 
         TextView title = new TextView(this);
-        title.setText("Weather");
+        title.setText("天气");
         title.setTextColor(Color.WHITE);
         title.setTextSize(30);
         title.setTypeface(Typeface.DEFAULT_BOLD);
@@ -504,7 +504,7 @@ public class MainActivity extends Activity {
         hero.addView(summary, new FrameLayout.LayoutParams(-1, -1));
 
         TextView city = new TextView(this);
-        city.setText("Batu Pahat, MY");
+        city.setText("北京, 中国");
         city.setTextColor(Color.argb(220, 255, 255, 255));
         city.setTextSize(19);
         city.setIncludeFontPadding(false);
@@ -527,7 +527,7 @@ public class MainActivity extends Activity {
         headline.addView(temp, new LinearLayout.LayoutParams(-2, -1));
 
         ImageView detailIcon = new ImageView(this);
-        detailIcon.setImageResource(weatherIconResource("Broken Clouds"));
+        detailIcon.setImageResource(weatherIconResource("多云"));
         detailIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
         LinearLayout.LayoutParams detailIconLp = new LinearLayout.LayoutParams(dp(118), dp(118));
         detailIconLp.leftMargin = dp(28);
@@ -535,7 +535,7 @@ public class MainActivity extends Activity {
         headline.addView(detailIcon, detailIconLp);
 
         TextView condition = new TextView(this);
-        condition.setText("Broken Clouds");
+        condition.setText("多云");
         condition.setTextColor(Color.WHITE);
         condition.setTextSize(30);
         condition.setTypeface(Typeface.DEFAULT_BOLD);
@@ -547,14 +547,14 @@ public class MainActivity extends Activity {
         LinearLayout metricLine1 = new LinearLayout(this);
         metricLine1.setGravity(Gravity.CENTER_VERTICAL);
         summary.addView(metricLine1, new LinearLayout.LayoutParams(dp(620), dp(36)));
-        addWeatherInfo(metricLine1, "Feels like : 35°C");
-        addWeatherInfo(metricLine1, "Humidity : 74%");
+        addWeatherInfo(metricLine1, "体感温度 : 35°C");
+        addWeatherInfo(metricLine1, "湿度 : 74%");
 
         LinearLayout metricLine2 = new LinearLayout(this);
         metricLine2.setGravity(Gravity.CENTER_VERTICAL);
         summary.addView(metricLine2, new LinearLayout.LayoutParams(dp(620), dp(36)));
-        addWeatherInfo(metricLine2, "Wind : 9 km/h");
-        addWeatherInfo(metricLine2, "Visibility : 10 km");
+        addWeatherInfo(metricLine2, "风速 : 9 km/h");
+        addWeatherInfo(metricLine2, "能见度 : 10 km");
 
         LinearLayout forecast = new LinearLayout(this);
         forecast.setGravity(Gravity.CENTER);
@@ -567,10 +567,10 @@ public class MainActivity extends Activity {
         forecastLp.rightMargin = dp(28);
         forecastLp.bottomMargin = dp(4);
         hero.addView(forecast, forecastLp);
-        addForecastTile(forecast, "Today", "Clouds", "31°C / 25°C");
-        addForecastTile(forecast, "Tue", "Rain", "30°C / 24°C");
-        addForecastTile(forecast, "Wed", "Partly", "32°C / 25°C");
-        addForecastTile(forecast, "Thu", "Clouds", "31°C / 25°C");
+        addForecastTile(forecast, "今天", "多云", "31°C / 25°C");
+        addForecastTile(forecast, "周二", "雨", "30°C / 24°C");
+        addForecastTile(forecast, "周三", "局部多云", "32°C / 25°C");
+        addForecastTile(forecast, "周四", "多云", "31°C / 25°C");
 
         setContentView(root);
         back.requestFocus();
@@ -705,7 +705,7 @@ public class MainActivity extends Activity {
         page.addView(menu, new LinearLayout.LayoutParams(dp(396), -1));
 
         TextView title = new TextView(this);
-        title.setText("Settings");
+        title.setText("设置");
         title.setTextColor(Color.argb(120, 255, 255, 255));
         title.setTextSize(36);
         title.setTypeface(Typeface.DEFAULT_BOLD);
@@ -726,7 +726,7 @@ public class MainActivity extends Activity {
         menuItems.setClipToPadding(false);
         menuScroll.addView(menuItems, new ScrollView.LayoutParams(-1, -2));
 
-        String[] sections = {"Theme Mode", "Controls", "Appearance", "About", "Help"};
+        String[] sections = {"主题模式", "控制", "外观", "关于", "帮助"};
         View selectedMenuItem = null;
         for (String section : sections) {
             TextView item = settingsMenuItem(section, section.equals(selected));
@@ -778,64 +778,64 @@ public class MainActivity extends Activity {
     }
 
     private void fillSettingsOptions(LinearLayout options, String selected) {
-        if ("Theme Mode".equals(selected)) {
-            addHeading(options, "Wallpaper theme");
-            addModeOption(options, "Light", "Built-in mountain wallpaper", "light");
-            addModeOption(options, "Dark", "AT4K-style dark gradient", "dark");
-            addOption(options, "Custom image", "Choose a local image file", "image".equals(bgMode()), v -> openPicker("image/*", REQ_IMAGE));
-            addOption(options, "Custom image from URL", prefs.getString("bg_url", "Download and use a remote image"), "url".equals(bgMode()), v -> askWallpaperUrl());
-            addOption(options, "Custom Video", "Choose a local video file, muted and looped", "video".equals(bgMode()), v -> openPicker("video/*", REQ_VIDEO));
-            addOption(options, "Custom Gradient", "Use a smooth launcher gradient", "gradient".equals(bgMode()), v -> {
-                rememberSettingsState(v, "Custom Gradient");
+        if ("主题模式".equals(selected)) {
+            addHeading(options, "壁纸主题");
+            addModeOption(options, "浅色", "内置山脉壁纸", "light");
+            addModeOption(options, "深色", "AT4K风格深色渐变", "dark");
+            addOption(options, "自定义图片", "选择本地图片文件", "image".equals(bgMode()), v -> openPicker("image/*", REQ_IMAGE));
+            addOption(options, "网络图片", prefs.getString("bg_url", "下载并使用远程图片"), "url".equals(bgMode()), v -> askWallpaperUrl());
+            addOption(options, "自定义视频", "选择本地视频文件，静音循环播放", "video".equals(bgMode()), v -> openPicker("video/*", REQ_VIDEO));
+            addOption(options, "自定义渐变", "使用流畅的渐变效果", "gradient".equals(bgMode()), v -> {
+                rememberSettingsState(v, "自定义渐变");
                 showGradientPicker();
             });
             return;
         }
-        if ("Controls".equals(selected)) {
-            addHeading(options, "Apps per row");
+        if ("控制".equals(selected)) {
+            addHeading(options, "每行应用数");
             addAppsOption(options, 5);
             addAppsOption(options, 6);
             addAppsOption(options, 7);
-            addHeading(options, "Home Launcher");
-            addOption(options, "Set as default Home launcher", homeStatusText(), isDefaultHomeLauncher(), v -> requestDefaultHomeLauncher());
-            addOption(options, "Test Home launcher", "Open the Android Home chooser if the system allows it", false, v -> testHomeLauncher());
-            addHeading(options, "Remote & Boot Controls");
-            addToggle(options, "Override back button exit", "Prevents Back from closing the launcher", "override_back_exit", "Controls");
-            addToggle(options, "Start on boot / update", "Safely open MyTV a few seconds after boot or app update", "start_on_boot", "Controls");
-            addToggle(options, "Auto open after wake", "Try to return to MyTV after screensaver or sleep ends", "auto_open_on_wake", "Controls");
-            addHeading(options, "Accessibility fallback");
-            addOption(options, "1. Allow restricted settings", "Open app info, then use the top-right menu if Google TV blocks access", false, v -> {
-                toast("If shown, choose Allow restricted settings, then return here.");
+            addHeading(options, "桌面启动器");
+            addOption(options, "设为默认桌面", homeStatusText(), isDefaultHomeLauncher(), v -> requestDefaultHomeLauncher());
+            addOption(options, "测试桌面", "如果系统允许，打开Android桌面选择器", false, v -> testHomeLauncher());
+            addHeading(options, "遥控器与开机控制");
+            addToggle(options, "禁用返回键退出", "防止按返回键退出桌面", "override_back_exit", "控制");
+            addToggle(options, "开机自动启动", "开机或更新后几秒自动启动", "start_on_boot", "控制");
+            addToggle(options, "唤醒后自动打开", "屏保或休眠结束后自动返回", "auto_open_on_wake", "控制");
+            addHeading(options, "无障碍服务备用方案");
+            addOption(options, "1. 允许受限设置", "打开应用信息，如果Google TV阻止访问请使用右上角菜单", false, v -> {
+                toast("如果显示，请选择允许受限设置，然后返回此处。");
                 openAppInfo(getPackageName());
             });
-            addOption(options, "2. Open MyTV accessibility page", isAccessibilityServiceEnabled() ? "Enabled" : "Enable MyTV Launcher Home Service", isAccessibilityServiceEnabled(), v -> openAccessibilitySettings());
-            addToggle(options, "Fallback: catch stock launcher", "Optional only; Android 13+ may block sideloaded apps", "override_current_launcher", "Controls");
-            addOption(options, "Google settings", "Open Android / Google TV system settings", false, v -> openGoogleSettings());
-            addOption(options, "Open app info", "Use this if Android blocks restricted settings", false, v -> openAppInfo(getPackageName()));
+            addOption(options, "2. 打开无障碍设置", isAccessibilityServiceEnabled() ? "已启用" : "启用桌面无障碍服务", isAccessibilityServiceEnabled(), v -> openAccessibilitySettings());
+            addToggle(options, "备用：拦截系统桌面", "可选功能；Android 13+可能阻止侧载应用", "override_current_launcher", "控制");
+            addOption(options, "系统设置", "打开Android/Google TV系统设置", false, v -> openGoogleSettings());
+            addOption(options, "打开应用信息", "如果Android阻止受限设置请使用此选项", false, v -> openAppInfo(getPackageName()));
             return;
         }
-        if ("Appearance".equals(selected)) {
-            addHeading(options, "Appearance");
-            addToggle(options, "Hide featured cards", "Hide the weather hero card on the home screen", "hide_featured", "Appearance");
-            addToggle(options, "Hide app section title", "Hide the My apps heading", "hide_app_titles", "Appearance");
-            addToggle(options, "Keep favorites at bottom", "Saved for the next favorite-row update", "favorites_bottom", "Appearance");
-            addToggle(options, "Use 24-hour clock", "Switch the clock format", "use_24h", "Appearance");
-            addToggle(options, "Minimal status bar", "Hide top controls for a cleaner wallpaper view", "minimal_status", "Appearance");
-            addOption(options, "Icon Pack", "Placeholder: Android icon-pack parsing comes next", false, v -> toast("Icon pack support will be added in the next build."));
+        if ("外观".equals(selected)) {
+            addHeading(options, "外观");
+            addToggle(options, "隐藏精选卡片", "隐藏首页天气卡片", "hide_featured", "外观");
+            addToggle(options, "隐藏应用标题", "隐藏\"我的应用\"标题", "hide_app_titles", "外观");
+            addToggle(options, "收藏保持在底部", "保存用于下次收藏行更新", "favorites_bottom", "外观");
+            addToggle(options, "使用24小时制", "切换时钟格式", "use_24h", "外观");
+            addToggle(options, "极简状态栏", "隐藏顶部控制栏，更清爽的壁纸视图", "minimal_status", "外观");
+            addOption(options, "图标包", "占位：图标包功能即将推出", false, v -> toast("图标包支持将在下一个版本中添加。"));
             return;
         }
-        if ("About".equals(selected)) {
-            addHeading(options, "MyTV Launcher");
-            addNote(options, "Open-source Android TV launcher inspired by ATK and Emotn layouts.");
-            addOption(options, "Reset launcher customization", "Restore defaults", false, v -> {
+        if ("关于".equals(selected)) {
+            addHeading(options, "星河桌面");
+            addNote(options, "灵感来自ATK和艾蒙顿布局的开源Android TV桌面。");
+            addOption(options, "重置桌面设置", "恢复默认设置", false, v -> {
                 prefs.edit().clear().apply();
-                toast("Settings reset");
+                toast("设置已重置");
                 showHome();
             });
             return;
         }
         addHeading(options, selected);
-        addNote(options, "This open-source build keeps the launcher focused on local customization and TV-friendly navigation.");
+        addNote(options, "此开源版本专注于本地自定义和电视友好的导航体验。");
     }
 
     private void loadApps() {
@@ -878,7 +878,7 @@ public class MainActivity extends Activity {
         root.addView(panel, new FrameLayout.LayoutParams(-1, -1));
 
         TextView title = new TextView(this);
-        title.setText("Search Play Store apps");
+        title.setText("搜索应用商店");
         title.setTextColor(Color.WHITE);
         title.setTextSize(30);
         title.setTypeface(Typeface.DEFAULT_BOLD);
@@ -888,7 +888,7 @@ public class MainActivity extends Activity {
         input.setSingleLine(true);
         input.setFocusable(true);
         input.setFocusableInTouchMode(true);
-        input.setHint("Search TV apps to download");
+        input.setHint("搜索要下载的TV应用");
         input.setTextColor(Color.WHITE);
         input.setHintTextColor(Color.argb(145, 255, 255, 255));
         input.setTextSize(20);
@@ -905,14 +905,14 @@ public class MainActivity extends Activity {
         panel.addView(input, inputLp);
 
         TextView playSearch = createActionButton(
-                new AppAction("Search Google Play", "Open Play Store results", () ->
+                new AppAction("搜索Google Play", "打开应用商店结果", () ->
                         openPlayStoreSearch(input.getText().toString().trim()), false), dialog);
         LinearLayout.LayoutParams playLp = new LinearLayout.LayoutParams(-1, dp(64));
         playLp.bottomMargin = dp(18);
         panel.addView(playSearch, playLp);
 
         TextView installedHeading = new TextView(this);
-        installedHeading.setText("Installed apps");
+        installedHeading.setText("已安装应用");
         installedHeading.setTextColor(Color.argb(190, 255, 255, 255));
         installedHeading.setTextSize(18);
         installedHeading.setTypeface(Typeface.DEFAULT_BOLD);
@@ -948,8 +948,8 @@ public class MainActivity extends Activity {
             if (shown == 0) {
                 TextView empty = new TextView(this);
                 empty.setText(TextUtils.isEmpty(q)
-                        ? "Type a name, then press Search Google Play. Installed matches appear here."
-                        : "No installed apps found");
+                        ? "输入名称，然后按搜索Google Play。已安装的匹配项显示在此处。"
+                        : "未找到已安装应用");
                 empty.setTextColor(Color.argb(180, 255, 255, 255));
                 empty.setTextSize(22);
                 results.addView(empty, new ViewGroup.LayoutParams(-1, dp(80)));
@@ -1005,7 +1005,7 @@ public class MainActivity extends Activity {
 
     private void openPlayStoreSearch(String query) {
         if (TextUtils.isEmpty(query)) {
-            toast("Type an app name first.");
+            toast("请先输入应用名称。");
             return;
         }
         PackageManager pm = getPackageManager();
@@ -1029,7 +1029,7 @@ public class MainActivity extends Activity {
             } catch (ActivityNotFoundException ignored) {
             }
         }
-        toast("Google Play Store is not available on this device.");
+        toast("此设备上没有Google Play商店。");
     }
 
     private View createSearchResultTile(PackageManager pm, AppEntry entry, Dialog searchDialog) {
@@ -1073,17 +1073,17 @@ public class MainActivity extends Activity {
 
     private List<AppAction> buildSearchActions(AppEntry entry, Dialog searchDialog) {
         List<AppAction> actions = new ArrayList<>();
-        actions.add(new AppAction("Open", "Launch app", () -> {
+        actions.add(new AppAction("打开", "启动应用", () -> {
             searchDialog.dismiss();
             launchEntry(entry, true);
         }, false));
-        actions.add(new AppAction("Folder", "Add to folder", () -> promptAddToFolder(entry), false));
-        actions.add(new AppAction("Hide", "Hide from launcher", () -> {
+        actions.add(new AppAction("文件夹", "添加到文件夹", () -> promptAddToFolder(entry), false));
+        actions.add(new AppAction("隐藏", "从桌面隐藏", () -> {
             searchDialog.dismiss();
             hideApp(entry.packageName);
         }, true));
-        actions.add(new AppAction("Icon", "Change icon", () -> toast("Custom icon picker comes next."), false));
-        actions.add(new AppAction("Info", "App info", () -> openAppInfo(entry.packageName), false));
+        actions.add(new AppAction("图标", "修改图标", () -> toast("自定义图标选择器即将推出。"), false));
+        actions.add(new AppAction("信息", "应用信息", () -> openAppInfo(entry.packageName), false));
         return actions;
     }
 
@@ -1105,7 +1105,7 @@ public class MainActivity extends Activity {
         long now = System.currentTimeMillis();
         if (cachedLaunchableApps != null
                 && TextUtils.equals(cachedHiddenKey, hiddenKey)
-                && now - cachedLaunchableAppsAt < 30000L) {
+                && now - cachedLaunchableAppsAt < 120000L) {
             List<AppEntry> cached = new ArrayList<>(cachedLaunchableApps);
             applySavedOrder(cached);
             return cached;
@@ -1321,7 +1321,7 @@ public class MainActivity extends Activity {
 
         card.setOnClickListener(v -> {
             if (!TextUtils.isEmpty(movingPackage)) {
-                toast("Position saved");
+                toast("位置已保存");
                 movingPackage = null;
                 loadApps();
                 return;
@@ -1333,7 +1333,7 @@ public class MainActivity extends Activity {
             try {
                 startExternalActivity(entry.launchIntent);
             } catch (ActivityNotFoundException ex) {
-                toast("Unable to open " + entry.label);
+                toast("无法打开 " + entry.label);
             }
         });
         card.setOnLongClickListener(v -> {
@@ -1484,23 +1484,23 @@ public class MainActivity extends Activity {
         }
         View restoreFocus = getCurrentFocus();
         List<AppAction> actions = new ArrayList<>();
-        actions.add(new AppAction("Open", "Launch app", () -> launchEntry(entry, true), false));
+        actions.add(new AppAction("打开", "启动应用", () -> launchEntry(entry, true), false));
         actions.add(new AppAction("Move", "Reorder on home", () -> {
             movingPackage = entry.packageName;
             focusAfterLoadPackage = entry.packageName;
             loadApps();
         }, false));
-        actions.add(new AppAction("Folder", "Add to folder", () -> promptAddToFolder(entry), false));
-        actions.add(new AppAction("Hide", "Hide from launcher", () -> hideApp(entry.packageName), true));
-        actions.add(new AppAction("Info", "App info", () -> openAppInfo(entry.packageName), false));
-        actions.add(new AppAction("Icon", "Change icon", () -> toast("Custom icon picker comes next."), false));
+        actions.add(new AppAction("文件夹", "添加到文件夹", () -> promptAddToFolder(entry), false));
+        actions.add(new AppAction("隐藏", "从桌面隐藏", () -> hideApp(entry.packageName), true));
+        actions.add(new AppAction("信息", "应用信息", () -> openAppInfo(entry.packageName), false));
+        actions.add(new AppAction("图标", "修改图标", () -> toast("自定义图标选择器即将推出。"), false));
         showAppActionDialog(entry, actions, restoreFocus);
     }
 
     private void showFolderMenu(AppEntry folder) {
         View restoreFocus = getCurrentFocus();
         List<AppAction> actions = new ArrayList<>();
-        actions.add(new AppAction("Open", "Open folder", () -> showFolder(folder), false));
+        actions.add(new AppAction("打开", "Open folder", () -> showFolder(folder), false));
         actions.add(new AppAction("Move", "Reorder on home", () -> {
             movingPackage = folder.packageName;
             focusAfterLoadPackage = folder.packageName;
@@ -1656,7 +1656,7 @@ public class MainActivity extends Activity {
         try {
             startExternalActivity(entry.launchIntent);
         } catch (ActivityNotFoundException ex) {
-            toast("Unable to open " + entry.label);
+            toast("无法打开 " + entry.label);
         }
     }
 
@@ -1883,7 +1883,7 @@ public class MainActivity extends Activity {
             try {
                 startExternalActivity(entry.launchIntent);
             } catch (ActivityNotFoundException ex) {
-                toast("Unable to open " + entry.label);
+                toast("无法打开 " + entry.label);
             }
         });
         card.setOnLongClickListener(v -> {
@@ -2056,7 +2056,7 @@ public class MainActivity extends Activity {
     private void showFolderChildMenu(PackageManager pm, AppEntry entry, String folderName) {
         View restoreFocus = getCurrentFocus();
         List<AppAction> actions = new ArrayList<>();
-        actions.add(new AppAction("Open", "Launch app", () -> launchEntry(entry, true), false));
+        actions.add(new AppAction("打开", "启动应用", () -> launchEntry(entry, true), false));
         actions.add(new AppAction("Move", "Reorder in folder", () -> {
             movingFolderName = folderName;
             movingFolderPackage = entry.packageName;
@@ -2069,9 +2069,9 @@ public class MainActivity extends Activity {
             }
         }, false));
         actions.add(new AppAction("Remove", "Remove from folder", () -> removeAppFromFolder(entry.packageName), true));
-        actions.add(new AppAction("Hide", "Hide from launcher", () -> hideApp(entry.packageName), true));
-        actions.add(new AppAction("Info", "App info", () -> openAppInfo(entry.packageName), false));
-        actions.add(new AppAction("Icon", "Change icon", () -> toast("Custom icon picker comes next."), false));
+        actions.add(new AppAction("隐藏", "从桌面隐藏", () -> hideApp(entry.packageName), true));
+        actions.add(new AppAction("信息", "应用信息", () -> openAppInfo(entry.packageName), false));
+        actions.add(new AppAction("图标", "修改图标", () -> toast("自定义图标选择器即将推出。"), false));
         showAppActionDialog(entry, actions, restoreFocus);
     }
 
@@ -2103,7 +2103,7 @@ public class MainActivity extends Activity {
             focused.setScaleY(1.07f);
             focused.requestFocus();
         }
-        toast("Position saved");
+        toast("位置已保存");
     }
 
     private void requestFolderCellFocus(View cell) {
@@ -2453,7 +2453,7 @@ public class MainActivity extends Activity {
         addOption(options, title, "", appsPerRow() == count, v -> {
             rememberSettingsState(v, title);
             prefs.edit().putInt("apps_per_row", count).apply();
-            showSettings("Controls");
+            showSettings("控制");
         });
     }
 
@@ -2577,7 +2577,7 @@ public class MainActivity extends Activity {
         input.setHint("https://example.com/wallpaper.jpg");
         input.setText(prefs.getString("bg_url", ""));
         new AlertDialog.Builder(this)
-                .setTitle("Custom image from URL")
+                .setTitle("网络图片")
                 .setView(input)
                 .setPositiveButton("Download", (dialog, which) -> downloadWallpaper(input.getText().toString().trim()))
                 .setNegativeButton("Cancel", null)
@@ -2596,7 +2596,7 @@ public class MainActivity extends Activity {
                 prefs.edit().putString("bg_mode", "url").putString("bg_url", url).apply();
                 runOnUiThread(() -> {
                     toast("URL wallpaper applied");
-                    showSettings("Theme Mode");
+                    showSettings("主题模式");
                 });
             } catch (Exception e) {
                 runOnUiThread(() -> toast("Could not download wallpaper"));
@@ -2606,7 +2606,7 @@ public class MainActivity extends Activity {
 
     private void setBgMode(String mode) {
         prefs.edit().putString("bg_mode", mode).apply();
-        showSettings("Theme Mode");
+        showSettings("主题模式");
     }
 
     private void showGradientPicker() {
@@ -2629,7 +2629,7 @@ public class MainActivity extends Activity {
         dim.addView(panel, panelLp);
 
         TextView title = new TextView(this);
-        title.setText("Custom Gradient");
+        title.setText("自定义渐变");
         title.setTextColor(Color.WHITE);
         title.setTextSize(25);
         title.setTypeface(Typeface.DEFAULT_BOLD);
@@ -2728,7 +2728,7 @@ public class MainActivity extends Activity {
             if (!applied[0]) {
                 prefs.edit().putString("bg_mode", originalMode).putString("gradient_id", originalId).apply();
             }
-            showSettings("Theme Mode");
+            showSettings("主题模式");
         });
         dialog.show();
         Window window = dialog.getWindow();
@@ -3157,7 +3157,7 @@ public class MainActivity extends Activity {
     }
 
     private void animateFocus(View v, boolean hasFocus, float scale) {
-        v.animate().scaleX(hasFocus ? scale : 1f).scaleY(hasFocus ? scale : 1f).translationZ(hasFocus ? dp(12) : 0).setDuration(130).start();
+        v.animate().scaleX(hasFocus ? scale : 1f).scaleY(hasFocus ? scale : 1f).translationZ(hasFocus ? dp(12) : 0).setDuration(100).start();
     }
 
     private void startHomeMoveWiggle(View card, String packageName) {
