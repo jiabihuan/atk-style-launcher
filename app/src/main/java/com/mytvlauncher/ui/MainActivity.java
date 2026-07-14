@@ -284,23 +284,13 @@ public class MainActivity extends Activity {
         bottomDockArea.setClipToPadding(false);
         mainArea.addView(bottomDockArea, new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
 
-        TextView drawerHint = new TextView(this);
-        drawerHint.setText("↓ 按↓打开应用抽屉");
-        drawerHint.setTextColor(Color.argb(160, 255, 255, 255));
-        drawerHint.setTextSize(13);
-        drawerHint.setGravity(Gravity.CENTER);
-        drawerHint.setPadding(0, 0, 0, dp(6));
-        bottomDockArea.addView(drawerHint, new LinearLayout.LayoutParams(-1, -2));
-
         dockRow = new LinearLayout(this);
         dockRow.setOrientation(LinearLayout.HORIZONTAL);
         dockRow.setGravity(Gravity.CENTER);
-        dockRow.setPadding(dp(20), dp(10), dp(20), dp(16));
+        dockRow.setPadding(dp(16), dp(8), dp(16), dp(10));
         dockRow.setClipChildren(false);
         dockRow.setClipToPadding(false);
-        dockRow.setBackground(glassDockBackground());
-        FrameLayout.LayoutParams dockLp = new FrameLayout.LayoutParams(-2, -2);
-        dockLp.bottomMargin = dp(18);
+        dockRow.setBackgroundColor(Color.TRANSPARENT);
         bottomDockArea.addView(dockRow, new LinearLayout.LayoutParams(-2, -2));
 
         loadDockApps();
@@ -366,13 +356,16 @@ public class MainActivity extends Activity {
             tileLp.rightMargin = dp(6);
             dockRow.addView(tile, tileLp);
 
-            tile.setOnKeyListener((v, keyCode, event) -> {
-                if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
-                    openAppDrawer();
-                    return true;
-                }
-                return false;
-            });
+            if (tile instanceof LinearLayout && ((LinearLayout) tile).getChildCount() > 0) {
+                View card = ((LinearLayout) tile).getChildAt(0);
+                card.setOnKeyListener((v, keyCode, event) -> {
+                    if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                        openAppDrawer();
+                        return true;
+                    }
+                    return false;
+                });
+            }
         }
     }
 
@@ -435,8 +428,7 @@ public class MainActivity extends Activity {
                 if (event.getAction() == KeyEvent.ACTION_DOWN) {
                     if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
                         int idx = drawerGrid.indexOfChild(v);
-                        int col = idx % 6;
-                        if (col < 2 || idx < 6) {
+                        if (idx < 6) {
                             closeAppDrawer();
                             return true;
                         }
@@ -659,12 +651,6 @@ public class MainActivity extends Activity {
 
         TextView filler = new TextView(this);
         top.addView(filler, new LinearLayout.LayoutParams(0, 1, 1));
-
-        searchPill = imageIconChip(R.drawable.ic_search_custom, 22);
-        searchPill.setOnClickListener(v -> showAppSearch());
-        LinearLayout.LayoutParams serviceLp = new LinearLayout.LayoutParams(dp(52), dp(38));
-        serviceLp.rightMargin = dp(10);
-        top.addView(searchPill, serviceLp);
 
         View googleSettingsButton = imageIconChip(R.drawable.ic_google_settings, 18);
         googleSettingsButton.setOnClickListener(v -> openGoogleSettings());
@@ -1638,12 +1624,102 @@ public class MainActivity extends Activity {
             }
             apps.add(new AppEntry(pkg, String.valueOf(info.loadLabel(pm)), launch, info.activityInfo.applicationInfo, banner));
         }
+
+        String[] extraIntentActions = {
+                Intent.ACTION_VIEW,
+                Intent.ACTION_GET_CONTENT,
+                Intent.ACTION_PICK
+        };
+        String[] extraMimeTypes = {
+                "file/*",
+                "vnd.android.cursor.dir/*",
+                "*/*"
+        };
+        for (String action : extraIntentActions) {
+            for (String mimeType : extraMimeTypes) {
+                try {
+                    Intent fileIntent = new Intent(action);
+                    fileIntent.setType(mimeType);
+                    fileIntent.addCategory(Intent.CATEGORY_DEFAULT);
+                    List<ResolveInfo> fileResolves = pm.queryIntentActivities(fileIntent, 0);
+                    for (ResolveInfo info : fileResolves) {
+                        if (info.activityInfo == null) continue;
+                        String pkg = info.activityInfo.packageName;
+                        if (getPackageName().equals(pkg) || seen.contains(pkg)) continue;
+                        if (hidden.contains(pkg)) continue;
+                        seen.add(pkg);
+                        Intent launch = pm.getLeanbackLaunchIntentForPackage(pkg);
+                        if (launch == null) launch = pm.getLaunchIntentForPackage(pkg);
+                        if (launch == null) {
+                            launch = new Intent(action);
+                            launch.setComponent(new ComponentName(pkg, info.activityInfo.name));
+                            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        }
+                        Drawable banner = null;
+                        try {
+                            banner = info.activityInfo.loadBanner(pm);
+                            if (banner == null) banner = info.activityInfo.applicationInfo.loadBanner(pm);
+                        } catch (Exception ignored) {
+                        }
+                        apps.add(new AppEntry(pkg, String.valueOf(info.loadLabel(pm)), launch, info.activityInfo.applicationInfo, banner));
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+
+        String[] knownFileManagers = {
+                "com.android.files",
+                "com.google.android.files",
+                "com.google.android.documentsui",
+                "com.amazon.tv.files",
+                "com.filetv.explorer",
+                "com.estrongs.android.pop",
+                "com.rhmsoft.fm",
+                "com.rhmsoft.fm.hd",
+                "com.mobisystems.fileman",
+                "pl.solidexplorer2",
+                "pl.solidexplorer",
+                "com.speedsoftware.explorer",
+                "com.speedsoftware.rootexplorer",
+                "com.dasmoticz.files",
+                "com.alphainventor.filemanager"
+        };
         try {
             for (ApplicationInfo appInfo : pm.getInstalledApplications(0)) {
                 String pkg = appInfo.packageName;
                 if (getPackageName().equals(pkg) || seen.contains(pkg) || hidden.contains(pkg)) continue;
+                boolean isKnownFileManager = false;
+                for (String knownPkg : knownFileManagers) {
+                    if (pkg.toLowerCase(Locale.ROOT).contains(knownPkg.toLowerCase(Locale.ROOT))
+                            || knownPkg.toLowerCase(Locale.ROOT).contains(pkg.toLowerCase(Locale.ROOT))) {
+                        isKnownFileManager = true;
+                        break;
+                    }
+                }
+                String appLabel = String.valueOf(appInfo.loadLabel(pm));
+                if (appLabel.toLowerCase(Locale.ROOT).contains("文件")
+                        || appLabel.toLowerCase(Locale.ROOT).contains("file")
+                        || appLabel.toLowerCase(Locale.ROOT).contains("explorer")
+                        || appLabel.toLowerCase(Locale.ROOT).contains("管理器")) {
+                    isKnownFileManager = true;
+                }
+                if (!isKnownFileManager) continue;
                 Intent launch = pm.getLeanbackLaunchIntentForPackage(pkg);
                 if (launch == null) launch = pm.getLaunchIntentForPackage(pkg);
+                if (launch == null) {
+                    try {
+                        Intent mainIntent = new Intent(Intent.ACTION_MAIN);
+                        mainIntent.setPackage(pkg);
+                        List<ResolveInfo> mainResolves = pm.queryIntentActivities(mainIntent, 0);
+                        if (mainResolves.size() > 0 && mainResolves.get(0).activityInfo != null) {
+                            launch = new Intent(Intent.ACTION_MAIN);
+                            launch.setComponent(new ComponentName(pkg, mainResolves.get(0).activityInfo.name));
+                            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        }
+                    } catch (Exception ignored) {
+                    }
+                }
                 if (launch == null) continue;
                 seen.add(pkg);
                 Drawable banner = null;
@@ -1651,10 +1727,11 @@ public class MainActivity extends Activity {
                     banner = appInfo.loadBanner(pm);
                 } catch (Exception ignored) {
                 }
-                apps.add(new AppEntry(pkg, String.valueOf(appInfo.loadLabel(pm)), launch, appInfo, banner));
+                apps.add(new AppEntry(pkg, appLabel, launch, appInfo, banner));
             }
         } catch (Exception ignored) {
         }
+
         Collator collator = Collator.getInstance(Locale.getDefault());
         Collections.sort(apps, (a, b) -> collator.compare(a.label, b.label));
         cachedLaunchableApps = new ArrayList<>(apps);
@@ -2911,11 +2988,11 @@ public class MainActivity extends Activity {
         FrameLayout chip = new FrameLayout(this);
         chip.setFocusable(true);
         chip.setClickable(true);
-        chip.setBackgroundResource(R.drawable.glass_chip);
-        chip.setOnFocusChangeListener((v, hasFocus) -> animateFocus(v, hasFocus, 1.06f));
+        chip.setBackgroundColor(Color.TRANSPARENT);
+        chip.setOnFocusChangeListener((v, hasFocus) -> animateFocus(v, hasFocus, 1.15f));
         ImageView icon = new ImageView(this);
         icon.setImageResource(resId);
-        icon.setColorFilter(Color.WHITE);
+        icon.setColorFilter(Color.argb(220, 255, 255, 255));
         icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
         chip.addView(icon, new FrameLayout.LayoutParams(dp(iconDp), dp(iconDp), Gravity.CENTER));
         return chip;
