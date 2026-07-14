@@ -98,6 +98,12 @@ public class MainActivity extends Activity {
     private List<AppEntry> cachedLaunchableApps;
     private String cachedHiddenKey = "";
     private long cachedLaunchableAppsAt;
+
+    private TextView weatherCityView;
+    private TextView weatherTempView;
+    private ImageView weatherIconView;
+    private long lastWeatherFetchTime;
+    private boolean weatherFetching;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -153,6 +159,9 @@ public class MainActivity extends Activity {
         super.onResume();
         enterImmersiveMode();
         updateServicePill();
+        if (!showingSettings && !showingWeatherDetails && weatherCityView != null) {
+            fetchWeather();
+        }
     }
 
     @Override
@@ -374,15 +383,6 @@ public class MainActivity extends Activity {
         settingsLp.rightMargin = dp(14);
         top.addView(mytvSettings, settingsLp);
 
-        TextClock clock = new TextClock(this);
-        clock.setFormat12Hour("h:mm");
-        clock.setFormat24Hour(prefs.getBoolean("use_24h", true) ? "HH:mm" : "h:mm");
-        clock.setGravity(Gravity.CENTER);
-        clock.setTextColor(Color.WHITE);
-        clock.setTextSize(24);
-        clock.setTypeface(Typeface.DEFAULT_BOLD);
-        clock.setBackgroundResource(R.drawable.glass_chip);
-        top.addView(clock, new LinearLayout.LayoutParams(dp(120), dp(50)));
         return top;
     }
 
@@ -404,36 +404,43 @@ public class MainActivity extends Activity {
         copy.setGravity(Gravity.CENTER_VERTICAL);
         card.addView(copy, new LinearLayout.LayoutParams(dp(218), -1));
 
-        TextView city = new TextView(this);
-        city.setText("北京");
-        city.setTextColor(Color.argb(185, 255, 255, 255));
-        city.setTextSize(16);
-        city.setSingleLine(true);
-        city.setEllipsize(TextUtils.TruncateAt.END);
-        copy.addView(city);
+        TextClock clock = new TextClock(this);
+        clock.setFormat12Hour("h:mm a");
+        clock.setFormat24Hour(prefs.getBoolean("use_24h", true) ? "HH:mm" : "h:mm a");
+        clock.setTextColor(Color.WHITE);
+        clock.setTextSize(42);
+        clock.setTypeface(Typeface.DEFAULT_BOLD);
+        clock.setIncludeFontPadding(false);
+        copy.addView(clock);
 
-        TextView temp = new TextView(this);
-        temp.setText("31°C");
-        temp.setTextColor(Color.WHITE);
-        temp.setTextSize(52);
-        temp.setTypeface(Typeface.DEFAULT_BOLD);
-        copy.addView(temp);
+        weatherCityView = new TextView(this);
+        weatherCityView.setText("定位中...");
+        weatherCityView.setTextColor(Color.argb(185, 255, 255, 255));
+        weatherCityView.setTextSize(16);
+        weatherCityView.setSingleLine(true);
+        weatherCityView.setEllipsize(TextUtils.TruncateAt.END);
+        copy.addView(weatherCityView);
 
-        TextView condition = new TextView(this);
-        condition.setText("多云");
-        condition.setTextColor(Color.argb(220, 255, 255, 255));
-        condition.setTextSize(19);
-        copy.addView(condition);
+        weatherTempView = new TextView(this);
+        weatherTempView.setText("--°C · --");
+        weatherTempView.setTextColor(Color.argb(240, 255, 255, 255));
+        weatherTempView.setTextSize(20);
+        weatherTempView.setTypeface(Typeface.DEFAULT_BOLD);
+        weatherTempView.setSingleLine(true);
+        copy.addView(weatherTempView);
 
-        ImageView weatherIcon = new ImageView(this);
-        weatherIcon.setImageResource(weatherIconResource("多云"));
-        weatherIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        weatherIcon.setPadding(0, 0, 0, 0);
-        LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(dp(172), dp(138));
+        weatherIconView = new ImageView(this);
+        weatherIconView.setImageResource(R.drawable.ic_weather_clouds);
+        weatherIconView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        weatherIconView.setPadding(0, 0, 0, 0);
+        LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(dp(160), dp(130));
         iconLp.leftMargin = dp(4);
-        card.addView(weatherIcon, iconLp);
+        card.addView(weatherIconView, iconLp);
+
         shell.setOnClickListener(v -> showWeatherDetails());
         shell.setOnFocusChangeListener((v, hasFocus) -> animateFocus(v, hasFocus, 1.03f));
+
+        fetchWeather();
         return shell;
     }
 
@@ -503,8 +510,13 @@ public class MainActivity extends Activity {
         summary.setClipToPadding(false);
         hero.addView(summary, new FrameLayout.LayoutParams(-1, -1));
 
+        String savedCity = prefs.getString("weather_city", "北京");
+        int savedTemp = prefs.getInt("weather_temp", 25);
+        int savedCode = prefs.getInt("weather_code", 3);
+        String conditionText = wmoCodeToCondition(savedCode);
+
         TextView city = new TextView(this);
-        city.setText("北京, 中国");
+        city.setText(savedCity);
         city.setTextColor(Color.argb(220, 255, 255, 255));
         city.setTextSize(19);
         city.setIncludeFontPadding(false);
@@ -518,7 +530,7 @@ public class MainActivity extends Activity {
         summary.addView(headline, new LinearLayout.LayoutParams(-1, dp(118)));
 
         TextView temp = new TextView(this);
-        temp.setText("31°C");
+        temp.setText(savedTemp + "°C");
         temp.setTextColor(Color.WHITE);
         temp.setTextSize(78);
         temp.setTypeface(Typeface.DEFAULT_BOLD);
@@ -527,7 +539,7 @@ public class MainActivity extends Activity {
         headline.addView(temp, new LinearLayout.LayoutParams(-2, -1));
 
         ImageView detailIcon = new ImageView(this);
-        detailIcon.setImageResource(weatherIconResource("多云"));
+        detailIcon.setImageResource(wmoCodeToIcon(savedCode));
         detailIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
         LinearLayout.LayoutParams detailIconLp = new LinearLayout.LayoutParams(dp(118), dp(118));
         detailIconLp.leftMargin = dp(28);
@@ -535,7 +547,7 @@ public class MainActivity extends Activity {
         headline.addView(detailIcon, detailIconLp);
 
         TextView condition = new TextView(this);
-        condition.setText("多云");
+        condition.setText(conditionText);
         condition.setTextColor(Color.WHITE);
         condition.setTextSize(30);
         condition.setTypeface(Typeface.DEFAULT_BOLD);
@@ -547,18 +559,39 @@ public class MainActivity extends Activity {
         LinearLayout metricLine1 = new LinearLayout(this);
         metricLine1.setGravity(Gravity.CENTER_VERTICAL);
         summary.addView(metricLine1, new LinearLayout.LayoutParams(dp(620), dp(36)));
-        addWeatherInfo(metricLine1, "体感温度 : 35°C");
-        addWeatherInfo(metricLine1, "湿度 : 74%");
+
+        String humidityStr = "湿度 : --%";
+        String windStr = "风速 : -- km/h";
+        String feelsStr = "体感 : --°C";
+        try {
+            String savedJson = prefs.getString("weather_json", "");
+            if (!TextUtils.isEmpty(savedJson)) {
+                org.json.JSONObject wObj = new org.json.JSONObject(savedJson);
+                org.json.JSONObject cur = wObj.optJSONObject("current");
+                if (cur != null) {
+                    int humidity = cur.optInt("relative_humidity_2m", 0);
+                    double wind = cur.optDouble("wind_speed_10m", 0);
+                    double curTemp = cur.optDouble("temperature_2m", 0);
+                    humidityStr = "湿度 : " + humidity + "%";
+                    windStr = "风速 : " + Math.round(wind) + " km/h";
+                    feelsStr = "体感 : " + Math.round(curTemp) + "°C";
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        addWeatherInfo(metricLine1, feelsStr);
+        addWeatherInfo(metricLine1, humidityStr);
 
         LinearLayout metricLine2 = new LinearLayout(this);
         metricLine2.setGravity(Gravity.CENTER_VERTICAL);
         summary.addView(metricLine2, new LinearLayout.LayoutParams(dp(620), dp(36)));
-        addWeatherInfo(metricLine2, "风速 : 9 km/h");
-        addWeatherInfo(metricLine2, "能见度 : 10 km");
+        addWeatherInfo(metricLine2, windStr);
+        addWeatherInfo(metricLine2, "能见度 : -- km");
 
         LinearLayout forecast = new LinearLayout(this);
         forecast.setGravity(Gravity.CENTER);
-        forecast.setPadding(dp(28), dp(8), dp(28), dp(10));
+        forecast.setPadding(dp(18), dp(8), dp(18), dp(10));
         forecast.setClipChildren(false);
         forecast.setClipToPadding(false);
         forecast.setBackground(weatherForecastBackground());
@@ -567,10 +600,53 @@ public class MainActivity extends Activity {
         forecastLp.rightMargin = dp(28);
         forecastLp.bottomMargin = dp(4);
         hero.addView(forecast, forecastLp);
-        addForecastTile(forecast, "今天", "多云", "31°C / 25°C");
-        addForecastTile(forecast, "周二", "雨", "30°C / 24°C");
-        addForecastTile(forecast, "周三", "局部多云", "32°C / 25°C");
-        addForecastTile(forecast, "周四", "多云", "31°C / 25°C");
+
+        String[] dayNames = {"今天", "明天", "后天", "周四", "周五", "周六", "周日"};
+        try {
+            String savedJson = prefs.getString("weather_json", "");
+            if (!TextUtils.isEmpty(savedJson)) {
+                org.json.JSONObject wObj = new org.json.JSONObject(savedJson);
+                org.json.JSONObject daily = wObj.optJSONObject("daily");
+                if (daily != null) {
+                    org.json.JSONArray codes = daily.optJSONArray("weather_code");
+                    org.json.JSONArray maxTemps = daily.optJSONArray("temperature_2m_max");
+                    org.json.JSONArray minTemps = daily.optJSONArray("temperature_2m_min");
+                    org.json.JSONArray times = daily.optJSONArray("time");
+                    if (codes != null && maxTemps != null && minTemps != null) {
+                        int count = Math.min(7, codes.length());
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("EE", Locale.CHINA);
+                        for (int i = 0; i < count; i++) {
+                            int code = codes.optInt(i, 3);
+                            double maxT = maxTemps.optDouble(i, 0);
+                            double minT = minTemps.optDouble(i, 0);
+                            String dayLabel = dayNames[i];
+                            if (i >= 3 && times != null) {
+                                try {
+                                    String dateStr = times.optString(i, "");
+                                    java.text.SimpleDateFormat parseSdf = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.CHINA);
+                                    java.util.Date date = parseSdf.parse(dateStr);
+                                    dayLabel = sdf.format(date);
+                                } catch (Exception ignored) {
+                                }
+                            }
+                            addForecastTile(forecast, dayLabel, wmoCodeToCondition(code),
+                                    Math.round(maxT) + "° / " + Math.round(minT) + "°");
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        if (forecast.getChildCount() == 0) {
+            addForecastTile(forecast, "今天", "多云", "31° / 25°");
+            addForecastTile(forecast, "明天", "雨", "30° / 24°");
+            addForecastTile(forecast, "后天", "局部多云", "32° / 25°");
+            addForecastTile(forecast, "周四", "多云", "31° / 25°");
+            addForecastTile(forecast, "周五", "晴", "33° / 26°");
+            addForecastTile(forecast, "周六", "晴", "34° / 27°");
+            addForecastTile(forecast, "周日", "多云", "32° / 26°");
+        }
 
         setContentView(root);
         back.requestFocus();
@@ -636,35 +712,35 @@ public class MainActivity extends Activity {
         LinearLayout tile = new LinearLayout(this);
         tile.setOrientation(LinearLayout.VERTICAL);
         tile.setGravity(Gravity.CENTER);
-        tile.setPadding(dp(10), dp(6), dp(10), dp(6));
+        tile.setPadding(dp(4), dp(6), dp(4), dp(6));
         tile.setClipChildren(false);
         tile.setClipToPadding(false);
         TextView dayView = new TextView(this);
         dayView.setText(day);
         dayView.setTextColor(Color.WHITE);
-        dayView.setTextSize(17);
+        dayView.setTextSize(15);
         dayView.setTypeface(Typeface.DEFAULT_BOLD);
         dayView.setGravity(Gravity.CENTER);
         dayView.setIncludeFontPadding(false);
         dayView.setShadowLayer(dp(2), 0, dp(1), Color.argb(115, 0, 0, 0));
-        tile.addView(dayView, new LinearLayout.LayoutParams(-1, dp(28)));
+        tile.addView(dayView, new LinearLayout.LayoutParams(-1, dp(24)));
         ImageView icon = new ImageView(this);
         icon.setImageResource(weatherIconResource(condition));
         icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        tile.addView(icon, new LinearLayout.LayoutParams(-1, dp(78)));
+        tile.addView(icon, new LinearLayout.LayoutParams(-1, dp(64)));
         TextView tempView = new TextView(this);
         tempView.setText(temp);
         tempView.setTextColor(Color.WHITE);
-        tempView.setTextSize(16);
+        tempView.setTextSize(14);
         tempView.setTypeface(Typeface.DEFAULT_BOLD);
         tempView.setGravity(Gravity.CENTER);
         tempView.setSingleLine(true);
         tempView.setIncludeFontPadding(false);
         tempView.setShadowLayer(dp(2), 0, dp(1), Color.argb(115, 0, 0, 0));
-        tile.addView(tempView, new LinearLayout.LayoutParams(-1, dp(28)));
+        tile.addView(tempView, new LinearLayout.LayoutParams(-1, dp(24)));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, -1, 1);
-        lp.leftMargin = dp(8);
-        lp.rightMargin = dp(8);
+        lp.leftMargin = dp(4);
+        lp.rightMargin = dp(4);
         parent.addView(tile, lp);
     }
 
@@ -681,6 +757,133 @@ public class MainActivity extends Activity {
         if (c.contains("broken") || c.contains("clouds")) return R.drawable.ic_weather_clouds;
         if (c.contains("cloud")) return R.drawable.ic_weather_cloud;
         return R.drawable.ic_weather_partly;
+    }
+
+    private int wmoCodeToIcon(int code) {
+        if (code == 0) return R.drawable.ic_weather_sun;
+        if (code == 1 || code == 2) return R.drawable.ic_weather_partly;
+        if (code == 3) return R.drawable.ic_weather_clouds;
+        if (code == 45 || code == 48) return R.drawable.ic_weather_wind;
+        if (code >= 51 && code <= 57) return R.drawable.ic_weather_rain;
+        if (code == 61 || code == 63 || code == 66 || code == 80) return R.drawable.ic_weather_rain;
+        if (code == 65 || code == 67 || code == 81 || code == 82) return R.drawable.ic_weather_heavy_rain;
+        if (code >= 71 && code <= 77) return R.drawable.ic_weather_wind;
+        if (code >= 95 && code <= 99) return R.drawable.ic_weather_storm;
+        return R.drawable.ic_weather_clouds;
+    }
+
+    private String wmoCodeToCondition(int code) {
+        if (code == 0) return "晴";
+        if (code == 1) return "大部晴";
+        if (code == 2) return "多云";
+        if (code == 3) return "阴";
+        if (code == 45 || code == 48) return "雾";
+        if (code == 51 || code == 53 || code == 55) return "毛毛雨";
+        if (code == 56 || code == 57) return "冻毛毛雨";
+        if (code == 61) return "小雨";
+        if (code == 63) return "中雨";
+        if (code == 65) return "大雨";
+        if (code == 66 || code == 67) return "冻雨";
+        if (code == 71 || code == 73 || code == 75) return "雪";
+        if (code == 77) return "雪粒";
+        if (code == 80) return "阵雨";
+        if (code == 81 || code == 82) return "强阵雨";
+        if (code == 85 || code == 86) return "阵雪";
+        if (code == 95) return "雷暴";
+        if (code == 96 || code == 99) return "雷暴冰雹";
+        return "未知";
+    }
+
+    private void fetchWeather() {
+        long now = System.currentTimeMillis();
+        if (weatherFetching || (now - lastWeatherFetchTime < 30 * 60 * 1000L && lastWeatherFetchTime > 0)) {
+            return;
+        }
+        weatherFetching = true;
+        new Thread(() -> {
+            try {
+                String cityName = "";
+                double lat = 0, lon = 0;
+
+                URL ipUrl = new URL("http://ip-api.com/json/?lang=zh-CN");
+                InputStream ipIs = ipUrl.openStream();
+                java.util.Scanner ipScanner = new java.util.Scanner(ipIs).useDelimiter("\\A");
+                String ipJson = ipScanner.hasNext() ? ipScanner.next() : "";
+                ipScanner.close();
+                ipIs.close();
+
+                org.json.JSONObject ipObj = new org.json.JSONObject(ipJson);
+                if ("success".equals(ipObj.optString("status"))) {
+                    cityName = ipObj.optString("city", "");
+                    if (TextUtils.isEmpty(cityName)) {
+                        cityName = ipObj.optString("regionName", "");
+                    }
+                    if (TextUtils.isEmpty(cityName)) {
+                        cityName = ipObj.optString("country", "");
+                    }
+                    lat = ipObj.optDouble("lat", 39.9);
+                    lon = ipObj.optDouble("lon", 116.4);
+                }
+
+                if (lat == 0 && lon == 0) {
+                    lat = 39.9042;
+                    lon = 116.4074;
+                    cityName = "北京";
+                }
+
+                String weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude=" + lat
+                        + "&longitude=" + lon
+                        + "&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m"
+                        + "&daily=weather_code,temperature_2m_max,temperature_2m_min"
+                        + "&timezone=auto";
+                URL wUrl = new URL(weatherUrl);
+                InputStream wIs = wUrl.openStream();
+                java.util.Scanner wScanner = new java.util.Scanner(wIs).useDelimiter("\\A");
+                String wJson = wScanner.hasNext() ? wScanner.next() : "";
+                wScanner.close();
+                wIs.close();
+
+                final String finalCityName = cityName;
+                final org.json.JSONObject weatherObj = new org.json.JSONObject(wJson);
+                final org.json.JSONObject current = weatherObj.optJSONObject("current");
+
+                runOnUiThread(() -> {
+                    try {
+                        if (current != null) {
+                            double temp = current.optDouble("temperature_2m", 0);
+                            int wmoCode = current.optInt("weather_code", 3);
+                            weatherTempView.setText(Math.round(temp) + "°C");
+                            weatherCityView.setText(finalCityName + " · " + wmoCodeToCondition(wmoCode));
+                            weatherIconView.setImageResource(wmoCodeToIcon(wmoCode));
+
+                            prefs.edit()
+                                    .putString("weather_city", finalCityName)
+                                    .putInt("weather_temp", (int) Math.round(temp))
+                                    .putInt("weather_code", wmoCode)
+                                    .putString("weather_json", wJson)
+                                    .apply();
+                        }
+                    } catch (Exception ignored) {
+                    }
+                    lastWeatherFetchTime = System.currentTimeMillis();
+                    weatherFetching = false;
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    String savedCity = prefs.getString("weather_city", "");
+                    int savedTemp = prefs.getInt("weather_temp", Integer.MIN_VALUE);
+                    if (!TextUtils.isEmpty(savedCity) && savedTemp != Integer.MIN_VALUE) {
+                        int savedCode = prefs.getInt("weather_code", 3);
+                        weatherTempView.setText(savedTemp + "°C");
+                        weatherCityView.setText(savedCity + " · " + wmoCodeToCondition(savedCode));
+                        weatherIconView.setImageResource(wmoCodeToIcon(savedCode));
+                    } else {
+                        weatherCityView.setText("获取失败");
+                    }
+                    weatherFetching = false;
+                });
+            }
+        }).start();
     }
 
     private void showSettings(String selected) {
