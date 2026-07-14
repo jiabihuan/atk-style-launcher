@@ -325,7 +325,6 @@ public class MainActivity extends Activity {
         dockRow.removeAllViews();
         Set<String> dockApps = prefs.getStringSet("dock_apps", new HashSet<>());
         List<AppEntry> dockEntries = new ArrayList<>();
-        List<String> defaultDock = new ArrayList<>();
 
         if (dockApps.isEmpty()) {
             for (AppEntry app : allApps) {
@@ -358,50 +357,23 @@ public class MainActivity extends Activity {
         }
 
         int dockSize = Math.min(5, dockEntries.size());
+        int cellWidth = dp(140);
         for (int i = 0; i < dockSize; i++) {
             AppEntry entry = dockEntries.get(i);
-            View dockTile = createDockAppTile(pm, entry);
-            LinearLayout.LayoutParams tileLp = new LinearLayout.LayoutParams(dp(100), dp(80));
+            View tile = createAppTile(pm, entry, cellWidth);
+            LinearLayout.LayoutParams tileLp = new LinearLayout.LayoutParams(cellWidth, -2);
             tileLp.leftMargin = dp(6);
             tileLp.rightMargin = dp(6);
-            dockRow.addView(dockTile, tileLp);
+            dockRow.addView(tile, tileLp);
+
+            tile.setOnKeyListener((v, keyCode, event) -> {
+                if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                    openAppDrawer();
+                    return true;
+                }
+                return false;
+            });
         }
-    }
-
-    private View createDockAppTile(PackageManager pm, AppEntry entry) {
-        FrameLayout card = new FrameLayout(this);
-        card.setFocusable(true);
-        card.setClickable(true);
-        card.setClipToOutline(true);
-        card.setBackgroundResource(R.drawable.app_card);
-        card.setPadding(dp(10), dp(6), dp(10), dp(6));
-
-        ImageView icon = new ImageView(this);
-        Drawable appIcon = loadAppIcon(pm, entry);
-        icon.setImageDrawable(appIcon);
-        icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        FrameLayout.LayoutParams iconLp = new FrameLayout.LayoutParams(dp(52), dp(52), Gravity.CENTER);
-        card.addView(icon, iconLp);
-
-        card.setOnClickListener(v -> {
-            try {
-                startExternalActivity(entry.launchIntent);
-            } catch (ActivityNotFoundException ex) {
-                toast("无法打开 " + entry.label);
-            }
-        });
-
-        card.setOnFocusChangeListener((v, hasFocus) -> animateFocus(v, hasFocus, 1.12f));
-
-        card.setOnKeyListener((v, keyCode, event) -> {
-            if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
-                openAppDrawer();
-                return true;
-            }
-            return false;
-        });
-
-        return card;
     }
 
     private void openAppDrawer() {
@@ -414,14 +386,15 @@ public class MainActivity extends Activity {
         appDrawerOverlay.setClipToPadding(false);
 
         FrameLayout drawerContainer = new FrameLayout(this);
-        drawerContainer.setId(View.generateViewId());
+        drawerContainer.setClipChildren(false);
+        drawerContainer.setClipToPadding(false);
         FrameLayout.LayoutParams drawerLp = new FrameLayout.LayoutParams(-1, -2);
         drawerLp.gravity = Gravity.BOTTOM;
         appDrawerOverlay.addView(drawerContainer, drawerLp);
 
         LinearLayout drawer = new LinearLayout(this);
         drawer.setOrientation(LinearLayout.VERTICAL);
-        drawer.setPadding(dp(40), dp(20), dp(40), dp(36));
+        drawer.setPadding(dp(40), dp(18), dp(40), dp(32));
         drawer.setClipChildren(false);
         drawer.setClipToPadding(false);
         drawer.setBackground(drawerBackground());
@@ -432,7 +405,7 @@ public class MainActivity extends Activity {
         drawerTitle.setTextColor(Color.WHITE);
         drawerTitle.setTextSize(22);
         drawerTitle.setTypeface(Typeface.DEFAULT_BOLD);
-        drawerTitle.setPadding(0, 0, 0, dp(14));
+        drawerTitle.setPadding(0, 0, 0, dp(10));
         drawer.addView(drawerTitle, new LinearLayout.LayoutParams(-1, -2));
 
         ScrollView drawerScroll = new ScrollView(this);
@@ -450,6 +423,7 @@ public class MainActivity extends Activity {
         PackageManager pm = getPackageManager();
         List<AppEntry> allApps = buildDisplayEntries(queryLaunchableApps(pm));
         int cellWidth = dp(150);
+        List<View> tileViews = new ArrayList<>();
         for (AppEntry entry : allApps) {
             View tile = createAppTile(pm, entry, cellWidth);
             GridLayout.LayoutParams gridLp = new GridLayout.LayoutParams();
@@ -475,26 +449,56 @@ public class MainActivity extends Activity {
                 return false;
             });
             drawerGrid.addView(tile);
+            tileViews.add(tile);
         }
 
         appDrawerOverlay.setOnClickListener(v -> closeAppDrawer());
         launcherRoot.addView(appDrawerOverlay, new FrameLayout.LayoutParams(-1, -1));
 
-        drawer.setTranslationY(dp(500));
+        drawer.setTranslationY(dp(600));
         drawer.setAlpha(0f);
+        drawerTitle.setAlpha(0f);
+        for (View tile : tileViews) {
+            tile.setAlpha(0f);
+            tile.setTranslationY(dp(120));
+            tile.setScaleY(0.6f);
+            tile.setPivotY(1f);
+        }
+
         appDrawerOverlay.setBackgroundColor(Color.argb(0, 0, 0, 0));
         drawer.animate()
                 .translationY(0)
                 .alpha(1f)
-                .setDuration(260)
-                .setInterpolator(new android.view.animation.DecelerateInterpolator(1.2f))
+                .setDuration(340)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator(0.9f))
                 .start();
+        drawerTitle.animate()
+                .setStartDelay(60)
+                .alpha(1f)
+                .setDuration(200)
+                .start();
+
+        for (int i = 0; i < tileViews.size(); i++) {
+            View tile = tileViews.get(i);
+            int row = i / 6;
+            int col = i % 6;
+            int delay = 70 + row * 35 + (5 - col) * 8;
+            tile.animate()
+                    .setStartDelay(delay)
+                    .alpha(1f)
+                    .translationY(0)
+                    .scaleY(1f)
+                    .setDuration(280)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator(1.3f))
+                    .start();
+        }
+
         appDrawerOverlay.animate()
-                .setStartDelay(30)
-                .setDuration(220)
+                .setStartDelay(20)
+                .setDuration(240)
                 .setUpdateListener(animation -> {
                     float frac = animation.getAnimatedFraction();
-                    appDrawerOverlay.setBackgroundColor(Color.argb((int) (frac * 140), 0, 0, 0));
+                    appDrawerOverlay.setBackgroundColor(Color.argb((int) (frac * 130), 0, 0, 0));
                 })
                 .start();
 
@@ -502,28 +506,58 @@ public class MainActivity extends Activity {
             if (drawerGrid.getChildCount() > 0) {
                 drawerGrid.getChildAt(0).requestFocus();
             }
-        }, 200);
+        }, 260);
     }
 
     private void closeAppDrawer() {
         if (!showingAppDrawer || appDrawerOverlay == null) return;
         showingAppDrawer = false;
 
-        View drawer = appDrawerOverlay.getChildAt(0);
-        if (drawer instanceof FrameLayout && ((FrameLayout) drawer).getChildCount() > 0) {
-            View content = ((FrameLayout) drawer).getChildAt(0);
-            content.animate()
-                    .translationY(dp(400))
+        View drawerContainer = appDrawerOverlay.getChildAt(0);
+        View drawer = null;
+        if (drawerContainer instanceof FrameLayout && ((FrameLayout) drawerContainer).getChildCount() > 0) {
+            drawer = ((FrameLayout) drawerContainer).getChildAt(0);
+        }
+
+        if (drawer instanceof LinearLayout) {
+            LinearLayout drawerLl = (LinearLayout) drawer;
+            if (drawerLl.getChildCount() >= 2) {
+                View scroll = drawerLl.getChildAt(1);
+                if (scroll instanceof ScrollView && ((ScrollView) scroll).getChildCount() > 0) {
+                    View grid = ((ScrollView) scroll).getChildAt(0);
+                    if (grid instanceof GridLayout) {
+                        GridLayout gridLayout = (GridLayout) grid;
+                        for (int i = 0; i < gridLayout.getChildCount(); i++) {
+                            View tile = gridLayout.getChildAt(i);
+                            int row = i / 6;
+                            int col = i % 6;
+                            int delay = row * 20 + (5 - col) * 5;
+                            tile.animate()
+                                    .setStartDelay(delay)
+                                    .alpha(0f)
+                                    .translationY(dp(60))
+                                    .scaleY(0.7f)
+                                    .setDuration(180)
+                                    .setInterpolator(new android.view.animation.AccelerateInterpolator(1.2f))
+                                    .start();
+                        }
+                    }
+                }
+            }
+            drawerLl.animate()
+                    .setStartDelay(80)
+                    .translationY(dp(500))
                     .alpha(0f)
-                    .setDuration(220)
+                    .setDuration(240)
                     .setInterpolator(new android.view.animation.AccelerateInterpolator(1.1f))
                     .start();
         }
+
         appDrawerOverlay.animate()
-                .setDuration(180)
+                .setDuration(220)
                 .setUpdateListener(animation -> {
                     float frac = 1f - animation.getAnimatedFraction();
-                    appDrawerOverlay.setBackgroundColor(Color.argb((int) (frac * 140), 0, 0, 0));
+                    appDrawerOverlay.setBackgroundColor(Color.argb((int) (frac * 130), 0, 0, 0));
                 })
                 .withEndAction(() -> {
                     if (launcherRoot != null && appDrawerOverlay != null) {
@@ -531,7 +565,10 @@ public class MainActivity extends Activity {
                         appDrawerOverlay = null;
                     }
                     if (dockRow != null && dockRow.getChildCount() > 0) {
-                        dockRow.getChildAt(0).requestFocus();
+                        LinearLayout firstTile = (LinearLayout) dockRow.getChildAt(0);
+                        if (firstTile != null && firstTile.getChildCount() > 0) {
+                            firstTile.getChildAt(0).requestFocus();
+                        }
                     }
                 })
                 .start();
@@ -623,22 +660,22 @@ public class MainActivity extends Activity {
         TextView filler = new TextView(this);
         top.addView(filler, new LinearLayout.LayoutParams(0, 1, 1));
 
-        searchPill = imageIconChip(R.drawable.ic_search_custom, 34);
+        searchPill = imageIconChip(R.drawable.ic_search_custom, 22);
         searchPill.setOnClickListener(v -> showAppSearch());
-        LinearLayout.LayoutParams serviceLp = new LinearLayout.LayoutParams(dp(78), dp(50));
-        serviceLp.rightMargin = dp(14);
+        LinearLayout.LayoutParams serviceLp = new LinearLayout.LayoutParams(dp(52), dp(38));
+        serviceLp.rightMargin = dp(10);
         top.addView(searchPill, serviceLp);
 
-        View googleSettingsButton = imageIconChip(R.drawable.ic_google_settings, 28);
+        View googleSettingsButton = imageIconChip(R.drawable.ic_google_settings, 18);
         googleSettingsButton.setOnClickListener(v -> openGoogleSettings());
-        LinearLayout.LayoutParams googleLp = new LinearLayout.LayoutParams(dp(78), dp(50));
-        googleLp.rightMargin = dp(14);
+        LinearLayout.LayoutParams googleLp = new LinearLayout.LayoutParams(dp(52), dp(38));
+        googleLp.rightMargin = dp(10);
         top.addView(googleSettingsButton, googleLp);
 
-        View mytvSettings = imageIconChip(R.drawable.ic_mytv_settings, 28);
+        View mytvSettings = imageIconChip(R.drawable.ic_mytv_settings, 18);
         mytvSettings.setOnClickListener(v -> showSettings("主题模式"));
-        LinearLayout.LayoutParams settingsLp = new LinearLayout.LayoutParams(dp(90), dp(50));
-        settingsLp.rightMargin = dp(14);
+        LinearLayout.LayoutParams settingsLp = new LinearLayout.LayoutParams(dp(60), dp(38));
+        settingsLp.rightMargin = dp(10);
         top.addView(mytvSettings, settingsLp);
 
         return top;
@@ -669,8 +706,8 @@ public class MainActivity extends Activity {
 
         weatherIconView = new ImageView(this);
         weatherIconView.setImageResource(R.drawable.ic_weather_clouds);
-        weatherIconView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(dp(56), dp(46));
+        weatherIconView.setScaleType(ImageView.ScaleType.FIT_XY);
+        LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(dp(96), dp(48));
         iconLp.topMargin = dp(2);
         iconLp.bottomMargin = dp(2);
         card.addView(weatherIconView, iconLp);
