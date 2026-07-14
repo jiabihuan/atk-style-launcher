@@ -104,6 +104,9 @@ public class MainActivity extends Activity {
     private ImageView weatherIconView;
     private long lastWeatherFetchTime;
     private boolean weatherFetching;
+    private boolean showingAppDrawer;
+    private FrameLayout appDrawerOverlay;
+    private LinearLayout dockRow;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -159,8 +162,11 @@ public class MainActivity extends Activity {
         super.onResume();
         enterImmersiveMode();
         updateServicePill();
-        if (!showingSettings && !showingWeatherDetails && weatherCityView != null) {
+        if (!showingSettings && !showingWeatherDetails && !showingAppDrawer && weatherCityView != null) {
             fetchWeather();
+        }
+        if (dockRow != null && !showingSettings && !showingWeatherDetails && !showingAppDrawer) {
+            loadDockApps();
         }
     }
 
@@ -172,6 +178,10 @@ public class MainActivity extends Activity {
         }
         if (folderOverlay != null) {
             dismissFolderOverlay();
+            return;
+        }
+        if (showingAppDrawer) {
+            closeAppDrawer();
             return;
         }
         if (showingSettings) {
@@ -226,6 +236,7 @@ public class MainActivity extends Activity {
     private void showHome() {
         showingSettings = false;
         showingWeatherDetails = false;
+        showingAppDrawer = false;
         currentVideoBackground = null;
         FrameLayout root = new FrameLayout(this);
         launcherRoot = root;
@@ -237,56 +248,303 @@ public class MainActivity extends Activity {
         topWash.setBackgroundResource(R.drawable.home_scrim);
         root.addView(topWash, new FrameLayout.LayoutParams(-1, -1));
 
-        homeScroll = new ScrollView(this);
-        homeScroll.setFillViewport(false);
-        homeScroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        homeScroll.setClipChildren(false);
-        homeScroll.setClipToPadding(false);
-        homeScroll.setPadding(0, dp(14), 0, dp(28));
-        root.addView(homeScroll, new FrameLayout.LayoutParams(-1, -1));
-
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(dp(54), dp(18), dp(54), dp(18));
         content.setClipChildren(false);
         content.setClipToPadding(false);
-        homeScroll.addView(content, new ScrollView.LayoutParams(-1, -2));
+        root.addView(content, new FrameLayout.LayoutParams(-1, -1));
 
         if (!prefs.getBoolean("minimal_status", false)) {
             content.addView(buildHomeTopBar(), new LinearLayout.LayoutParams(-1, dp(64)));
         }
 
+        FrameLayout mainArea = new FrameLayout(this);
+        mainArea.setClipChildren(false);
+        mainArea.setClipToPadding(false);
+        LinearLayout.LayoutParams mainLp = new LinearLayout.LayoutParams(-1, 0);
+        mainLp.weight = 1;
+        content.addView(mainArea, mainLp);
+
+        LinearLayout heroArea = new LinearLayout(this);
+        heroArea.setOrientation(LinearLayout.HORIZONTAL);
+        heroArea.setGravity(Gravity.TOP | Gravity.START);
+        heroArea.setPadding(dp(54), dp(18), dp(54), 0);
+        heroArea.setClipChildren(false);
+        heroArea.setClipToPadding(false);
+        mainArea.addView(heroArea, new FrameLayout.LayoutParams(-1, -2));
+
         if (!prefs.getBoolean("hide_featured", false)) {
-            LinearLayout heroRow = new LinearLayout(this);
-            heroRow.setGravity(Gravity.CENTER_VERTICAL);
-            heroRow.setPadding(dp(4), dp(18), dp(4), dp(2));
-            heroRow.setClipChildren(false);
-            heroRow.setClipToPadding(false);
-            content.addView(heroRow, new LinearLayout.LayoutParams(-1, dp(252)));
-            heroRow.addView(buildWeatherCard(), new LinearLayout.LayoutParams(dp(460), dp(198)));
-            TextView spacer = new TextView(this);
-            heroRow.addView(spacer, new LinearLayout.LayoutParams(0, 1, 1));
+            heroArea.addView(buildWeatherCard(), new LinearLayout.LayoutParams(dp(150), dp(140)));
         }
 
-        if (!prefs.getBoolean("hide_app_titles", false)) {
-            TextView title = new TextView(this);
-            title.setText("我的应用");
-            title.setTextColor(Color.WHITE);
-            title.setTextSize(24);
-            title.setTypeface(Typeface.DEFAULT_BOLD);
-            content.addView(title, new LinearLayout.LayoutParams(-1, -2));
-        }
+        LinearLayout bottomDockArea = new LinearLayout(this);
+        bottomDockArea.setOrientation(LinearLayout.VERTICAL);
+        bottomDockArea.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+        bottomDockArea.setClipChildren(false);
+        bottomDockArea.setClipToPadding(false);
+        mainArea.addView(bottomDockArea, new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
 
-        appsGrid = new GridLayout(this);
-        appsGrid.setColumnCount(appsPerRow());
-        appsGrid.setPadding(0, dp(14), 0, dp(42));
-        appsGrid.setClipChildren(false);
-        appsGrid.setClipToPadding(false);
-        content.addView(appsGrid, new LinearLayout.LayoutParams(-1, -2));
+        TextView drawerHint = new TextView(this);
+        drawerHint.setText("↓ 按↓打开应用抽屉");
+        drawerHint.setTextColor(Color.argb(160, 255, 255, 255));
+        drawerHint.setTextSize(13);
+        drawerHint.setGravity(Gravity.CENTER);
+        drawerHint.setPadding(0, 0, 0, dp(6));
+        bottomDockArea.addView(drawerHint, new LinearLayout.LayoutParams(-1, -2));
 
+        dockRow = new LinearLayout(this);
+        dockRow.setOrientation(LinearLayout.HORIZONTAL);
+        dockRow.setGravity(Gravity.CENTER);
+        dockRow.setPadding(dp(20), dp(10), dp(20), dp(16));
+        dockRow.setClipChildren(false);
+        dockRow.setClipToPadding(false);
+        dockRow.setBackground(glassDockBackground());
+        FrameLayout.LayoutParams dockLp = new FrameLayout.LayoutParams(-2, -2);
+        dockLp.bottomMargin = dp(18);
+        bottomDockArea.addView(dockRow, new LinearLayout.LayoutParams(-2, -2));
+
+        loadDockApps();
         setContentView(root);
-        loadApps();
-        updateServicePill();
+    }
+
+    private GradientDrawable glassDockBackground() {
+        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{
+                        Color.argb(180, 255, 255, 255),
+                        Color.argb(120, 200, 210, 220)
+                });
+        bg.setCornerRadius(dp(24));
+        bg.setStroke(dp(1), Color.argb(60, 255, 255, 255));
+        return bg;
+    }
+
+    private void loadDockApps() {
+        if (dockRow == null) return;
+        PackageManager pm = getPackageManager();
+        List<AppEntry> allApps = queryLaunchableApps(pm);
+        dockRow.removeAllViews();
+        Set<String> dockApps = prefs.getStringSet("dock_apps", new HashSet<>());
+        List<AppEntry> dockEntries = new ArrayList<>();
+        List<String> defaultDock = new ArrayList<>();
+
+        if (dockApps.isEmpty()) {
+            for (AppEntry app : allApps) {
+                if (dockEntries.size() >= 5) break;
+                dockEntries.add(app);
+            }
+        } else {
+            List<String> dockList = new ArrayList<>(dockApps);
+            for (String pkg : dockList) {
+                for (AppEntry app : allApps) {
+                    if (TextUtils.equals(app.packageName, pkg)) {
+                        dockEntries.add(app);
+                        break;
+                    }
+                }
+            }
+            while (dockEntries.size() < 5 && allApps.size() > dockEntries.size()) {
+                for (AppEntry app : allApps) {
+                    if (dockEntries.size() >= 5) break;
+                    boolean found = false;
+                    for (AppEntry de : dockEntries) {
+                        if (TextUtils.equals(de.packageName, app.packageName)) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found && !app.isFolder) dockEntries.add(app);
+                }
+            }
+        }
+
+        int dockSize = Math.min(5, dockEntries.size());
+        for (int i = 0; i < dockSize; i++) {
+            AppEntry entry = dockEntries.get(i);
+            View dockTile = createDockAppTile(pm, entry);
+            LinearLayout.LayoutParams tileLp = new LinearLayout.LayoutParams(dp(100), dp(80));
+            tileLp.leftMargin = dp(6);
+            tileLp.rightMargin = dp(6);
+            dockRow.addView(dockTile, tileLp);
+        }
+    }
+
+    private View createDockAppTile(PackageManager pm, AppEntry entry) {
+        FrameLayout card = new FrameLayout(this);
+        card.setFocusable(true);
+        card.setClickable(true);
+        card.setClipToOutline(true);
+        card.setBackgroundResource(R.drawable.app_card);
+        card.setPadding(dp(10), dp(6), dp(10), dp(6));
+
+        ImageView icon = new ImageView(this);
+        Drawable appIcon = loadAppIcon(pm, entry);
+        icon.setImageDrawable(appIcon);
+        icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        FrameLayout.LayoutParams iconLp = new FrameLayout.LayoutParams(dp(52), dp(52), Gravity.CENTER);
+        card.addView(icon, iconLp);
+
+        card.setOnClickListener(v -> {
+            try {
+                startExternalActivity(entry.launchIntent);
+            } catch (ActivityNotFoundException ex) {
+                toast("无法打开 " + entry.label);
+            }
+        });
+
+        card.setOnFocusChangeListener((v, hasFocus) -> animateFocus(v, hasFocus, 1.12f));
+
+        card.setOnKeyListener((v, keyCode, event) -> {
+            if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                openAppDrawer();
+                return true;
+            }
+            return false;
+        });
+
+        return card;
+    }
+
+    private void openAppDrawer() {
+        if (showingAppDrawer) return;
+        showingAppDrawer = true;
+
+        appDrawerOverlay = new FrameLayout(this);
+        appDrawerOverlay.setBackgroundColor(Color.argb(0, 0, 0, 0));
+        appDrawerOverlay.setClipChildren(false);
+        appDrawerOverlay.setClipToPadding(false);
+
+        FrameLayout drawerContainer = new FrameLayout(this);
+        drawerContainer.setId(View.generateViewId());
+        FrameLayout.LayoutParams drawerLp = new FrameLayout.LayoutParams(-1, -2);
+        drawerLp.gravity = Gravity.BOTTOM;
+        appDrawerOverlay.addView(drawerContainer, drawerLp);
+
+        LinearLayout drawer = new LinearLayout(this);
+        drawer.setOrientation(LinearLayout.VERTICAL);
+        drawer.setPadding(dp(40), dp(20), dp(40), dp(36));
+        drawer.setClipChildren(false);
+        drawer.setClipToPadding(false);
+        drawer.setBackground(drawerBackground());
+        drawerContainer.addView(drawer, new FrameLayout.LayoutParams(-1, -2));
+
+        TextView drawerTitle = new TextView(this);
+        drawerTitle.setText("所有应用");
+        drawerTitle.setTextColor(Color.WHITE);
+        drawerTitle.setTextSize(22);
+        drawerTitle.setTypeface(Typeface.DEFAULT_BOLD);
+        drawerTitle.setPadding(0, 0, 0, dp(14));
+        drawer.addView(drawerTitle, new LinearLayout.LayoutParams(-1, -2));
+
+        ScrollView drawerScroll = new ScrollView(this);
+        drawerScroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        drawerScroll.setClipChildren(false);
+        drawerScroll.setClipToPadding(false);
+        drawer.addView(drawerScroll, new LinearLayout.LayoutParams(-1, dp(380)));
+
+        GridLayout drawerGrid = new GridLayout(this);
+        drawerGrid.setColumnCount(6);
+        drawerGrid.setClipChildren(false);
+        drawerGrid.setClipToPadding(false);
+        drawerScroll.addView(drawerGrid, new ScrollView.LayoutParams(-1, -2));
+
+        PackageManager pm = getPackageManager();
+        List<AppEntry> allApps = buildDisplayEntries(queryLaunchableApps(pm));
+        int cellWidth = dp(150);
+        for (AppEntry entry : allApps) {
+            View tile = createAppTile(pm, entry, cellWidth);
+            GridLayout.LayoutParams gridLp = new GridLayout.LayoutParams();
+            gridLp.width = cellWidth;
+            gridLp.height = dp(prefs.getBoolean("hide_app_titles", false) ? 116 : 150);
+            gridLp.setMargins(dp(4), dp(6), dp(4), dp(6));
+            tile.setLayoutParams(gridLp);
+            tile.setOnKeyListener((v, keyCode, event) -> {
+                if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                    if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                        int idx = drawerGrid.indexOfChild(v);
+                        int col = idx % 6;
+                        if (col < 2 || idx < 6) {
+                            closeAppDrawer();
+                            return true;
+                        }
+                    }
+                    if (keyCode == KeyEvent.KEYCODE_BACK) {
+                        closeAppDrawer();
+                        return true;
+                    }
+                }
+                return false;
+            });
+            drawerGrid.addView(tile);
+        }
+
+        appDrawerOverlay.setOnClickListener(v -> closeAppDrawer());
+        launcherRoot.addView(appDrawerOverlay, new FrameLayout.LayoutParams(-1, -1));
+
+        drawer.setTranslationY(dp(500));
+        drawer.setAlpha(0f);
+        appDrawerOverlay.setBackgroundColor(Color.argb(0, 0, 0, 0));
+        drawer.animate()
+                .translationY(0)
+                .alpha(1f)
+                .setDuration(260)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator(1.2f))
+                .start();
+        appDrawerOverlay.animate()
+                .setStartDelay(30)
+                .setDuration(220)
+                .setUpdateListener(animation -> {
+                    float frac = animation.getAnimatedFraction();
+                    appDrawerOverlay.setBackgroundColor(Color.argb((int) (frac * 140), 0, 0, 0));
+                })
+                .start();
+
+        drawer.postDelayed(() -> {
+            if (drawerGrid.getChildCount() > 0) {
+                drawerGrid.getChildAt(0).requestFocus();
+            }
+        }, 200);
+    }
+
+    private void closeAppDrawer() {
+        if (!showingAppDrawer || appDrawerOverlay == null) return;
+        showingAppDrawer = false;
+
+        View drawer = appDrawerOverlay.getChildAt(0);
+        if (drawer instanceof FrameLayout && ((FrameLayout) drawer).getChildCount() > 0) {
+            View content = ((FrameLayout) drawer).getChildAt(0);
+            content.animate()
+                    .translationY(dp(400))
+                    .alpha(0f)
+                    .setDuration(220)
+                    .setInterpolator(new android.view.animation.AccelerateInterpolator(1.1f))
+                    .start();
+        }
+        appDrawerOverlay.animate()
+                .setDuration(180)
+                .setUpdateListener(animation -> {
+                    float frac = 1f - animation.getAnimatedFraction();
+                    appDrawerOverlay.setBackgroundColor(Color.argb((int) (frac * 140), 0, 0, 0));
+                })
+                .withEndAction(() -> {
+                    if (launcherRoot != null && appDrawerOverlay != null) {
+                        launcherRoot.removeView(appDrawerOverlay);
+                        appDrawerOverlay = null;
+                    }
+                    if (dockRow != null && dockRow.getChildCount() > 0) {
+                        dockRow.getChildAt(0).requestFocus();
+                    }
+                })
+                .start();
+    }
+
+    private GradientDrawable drawerBackground() {
+        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{
+                        Color.argb(230, 40, 45, 55),
+                        Color.argb(245, 25, 28, 36)
+                });
+        bg.setCornerRadii(new float[]{dp(28), dp(28), dp(28), dp(28), 0, 0, 0, 0});
+        return bg;
     }
 
     private void addBackground(FrameLayout root) {
@@ -394,51 +652,49 @@ public class MainActivity extends Activity {
         shell.setClipToOutline(false);
 
         LinearLayout card = new LinearLayout(this);
-        card.setOrientation(LinearLayout.HORIZONTAL);
-        card.setGravity(Gravity.CENTER_VERTICAL);
-        card.setPadding(dp(22), dp(18), dp(14), dp(16));
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setGravity(Gravity.CENTER);
+        card.setPadding(dp(12), dp(10), dp(12), dp(10));
         shell.addView(card, new FrameLayout.LayoutParams(-1, -1));
-
-        LinearLayout copy = new LinearLayout(this);
-        copy.setOrientation(LinearLayout.VERTICAL);
-        copy.setGravity(Gravity.CENTER_VERTICAL);
-        card.addView(copy, new LinearLayout.LayoutParams(dp(218), -1));
 
         TextClock clock = new TextClock(this);
         clock.setFormat12Hour("h:mm a");
         clock.setFormat24Hour(prefs.getBoolean("use_24h", true) ? "HH:mm" : "h:mm a");
         clock.setTextColor(Color.WHITE);
-        clock.setTextSize(42);
+        clock.setTextSize(20);
         clock.setTypeface(Typeface.DEFAULT_BOLD);
         clock.setIncludeFontPadding(false);
-        copy.addView(clock);
-
-        weatherCityView = new TextView(this);
-        weatherCityView.setText("定位中...");
-        weatherCityView.setTextColor(Color.argb(185, 255, 255, 255));
-        weatherCityView.setTextSize(16);
-        weatherCityView.setSingleLine(true);
-        weatherCityView.setEllipsize(TextUtils.TruncateAt.END);
-        copy.addView(weatherCityView);
-
-        weatherTempView = new TextView(this);
-        weatherTempView.setText("--°C · --");
-        weatherTempView.setTextColor(Color.argb(240, 255, 255, 255));
-        weatherTempView.setTextSize(20);
-        weatherTempView.setTypeface(Typeface.DEFAULT_BOLD);
-        weatherTempView.setSingleLine(true);
-        copy.addView(weatherTempView);
+        clock.setGravity(Gravity.CENTER);
+        card.addView(clock, new LinearLayout.LayoutParams(-1, -2));
 
         weatherIconView = new ImageView(this);
         weatherIconView.setImageResource(R.drawable.ic_weather_clouds);
         weatherIconView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        weatherIconView.setPadding(0, 0, 0, 0);
-        LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(dp(160), dp(130));
-        iconLp.leftMargin = dp(4);
+        LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(dp(56), dp(46));
+        iconLp.topMargin = dp(2);
+        iconLp.bottomMargin = dp(2);
         card.addView(weatherIconView, iconLp);
 
+        weatherTempView = new TextView(this);
+        weatherTempView.setText("--°");
+        weatherTempView.setTextColor(Color.WHITE);
+        weatherTempView.setTextSize(18);
+        weatherTempView.setTypeface(Typeface.DEFAULT_BOLD);
+        weatherTempView.setSingleLine(true);
+        weatherTempView.setGravity(Gravity.CENTER);
+        card.addView(weatherTempView, new LinearLayout.LayoutParams(-1, -2));
+
+        weatherCityView = new TextView(this);
+        weatherCityView.setText("定位中...");
+        weatherCityView.setTextColor(Color.argb(200, 255, 255, 255));
+        weatherCityView.setTextSize(12);
+        weatherCityView.setSingleLine(true);
+        weatherCityView.setEllipsize(TextUtils.TruncateAt.END);
+        weatherCityView.setGravity(Gravity.CENTER);
+        card.addView(weatherCityView, new LinearLayout.LayoutParams(-1, -2));
+
         shell.setOnClickListener(v -> showWeatherDetails());
-        shell.setOnFocusChangeListener((v, hasFocus) -> animateFocus(v, hasFocus, 1.03f));
+        shell.setOnFocusChangeListener((v, hasFocus) -> animateFocus(v, hasFocus, 1.06f));
 
         fetchWeather();
         return shell;
@@ -852,8 +1108,8 @@ public class MainActivity extends Activity {
                         if (current != null) {
                             double temp = current.optDouble("temperature_2m", 0);
                             int wmoCode = current.optInt("weather_code", 3);
-                            weatherTempView.setText(Math.round(temp) + "°C");
-                            weatherCityView.setText(finalCityName + " · " + wmoCodeToCondition(wmoCode));
+                            weatherTempView.setText(Math.round(temp) + "°");
+                            weatherCityView.setText(finalCityName);
                             weatherIconView.setImageResource(wmoCodeToIcon(wmoCode));
 
                             prefs.edit()
@@ -874,8 +1130,8 @@ public class MainActivity extends Activity {
                     int savedTemp = prefs.getInt("weather_temp", Integer.MIN_VALUE);
                     if (!TextUtils.isEmpty(savedCity) && savedTemp != Integer.MIN_VALUE) {
                         int savedCode = prefs.getInt("weather_code", 3);
-                        weatherTempView.setText(savedTemp + "°C");
-                        weatherCityView.setText(savedCity + " · " + wmoCodeToCondition(savedCode));
+                        weatherTempView.setText(savedTemp + "°");
+                        weatherCityView.setText(savedCity);
                         weatherIconView.setImageResource(wmoCodeToIcon(savedCode));
                     } else {
                         weatherCityView.setText("获取失败");
