@@ -630,7 +630,7 @@ public class MainActivity extends Activity {
                                 }
                             }
                             addForecastTile(forecast, dayLabel, wmoCodeToCondition(code),
-                                    Math.round(maxT) + "° / " + Math.round(minT) + "°");
+                                    Math.round(maxT) + "° / " + Math.round(minT) + "°", code);
                         }
                     }
                 }
@@ -639,13 +639,13 @@ public class MainActivity extends Activity {
         }
 
         if (forecast.getChildCount() == 0) {
-            addForecastTile(forecast, "今天", "多云", "31° / 25°");
-            addForecastTile(forecast, "明天", "雨", "30° / 24°");
-            addForecastTile(forecast, "后天", "局部多云", "32° / 25°");
-            addForecastTile(forecast, "周四", "多云", "31° / 25°");
-            addForecastTile(forecast, "周五", "晴", "33° / 26°");
-            addForecastTile(forecast, "周六", "晴", "34° / 27°");
-            addForecastTile(forecast, "周日", "多云", "32° / 26°");
+            addForecastTile(forecast, "今天", "多云", "31° / 25°", 3);
+            addForecastTile(forecast, "明天", "雨", "30° / 24°", 61);
+            addForecastTile(forecast, "后天", "局部多云", "32° / 25°", 2);
+            addForecastTile(forecast, "周四", "多云", "31° / 25°", 3);
+            addForecastTile(forecast, "周五", "晴", "33° / 26°", 0);
+            addForecastTile(forecast, "周六", "晴", "34° / 27°", 0);
+            addForecastTile(forecast, "周日", "多云", "32° / 26°", 2);
         }
 
         setContentView(root);
@@ -708,7 +708,7 @@ public class MainActivity extends Activity {
         parent.addView(row, lp);
     }
 
-    private void addForecastTile(LinearLayout parent, String day, String condition, String temp) {
+    private void addForecastTile(LinearLayout parent, String day, String condition, String temp, int wmoCode) {
         LinearLayout tile = new LinearLayout(this);
         tile.setOrientation(LinearLayout.VERTICAL);
         tile.setGravity(Gravity.CENTER);
@@ -725,7 +725,7 @@ public class MainActivity extends Activity {
         dayView.setShadowLayer(dp(2), 0, dp(1), Color.argb(115, 0, 0, 0));
         tile.addView(dayView, new LinearLayout.LayoutParams(-1, dp(24)));
         ImageView icon = new ImageView(this);
-        icon.setImageResource(weatherIconResource(condition));
+        icon.setImageResource(wmoCodeToIcon(wmoCode));
         icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
         tile.addView(icon, new LinearLayout.LayoutParams(-1, dp(64)));
         TextView tempView = new TextView(this);
