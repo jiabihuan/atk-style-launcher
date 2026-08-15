@@ -3413,7 +3413,7 @@ public class MainActivity extends Activity {
     }
 
     private GradientDrawable gradientDrawable(GradientPreset preset, boolean selected, boolean focused) {
-        GradientDrawable.Direction orientation = preset.vertical
+        GradientDrawable.Orientation orientation = preset.vertical
                 ? GradientDrawable.Orientation.TOP_BOTTOM
                 : GradientDrawable.Orientation.TL_BR;
         GradientDrawable bg = new GradientDrawable(orientation, preset.colors);
