@@ -422,17 +422,17 @@ public class MainActivity extends Activity {
 
             tile.setOnKeyListener((v, keyCode, event) -> {
                 if (event.getAction() == KeyEvent.ACTION_DOWN) {
-                    int posInRow = currentRow.indexOfChild(v);
-                    int totalInRow = currentRow.getChildCount();
                     int globalIndex = tileViews.indexOf(v);
+                    int posInRow = globalIndex % columns;
+                    int totalInRow = Math.min(columns, tileViews.size() - (globalIndex / columns) * columns);
                     if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
                         if (posInRow > 0) {
-                            currentRow.getChildAt(posInRow - 1).requestFocus();
+                            tileViews.get(globalIndex - 1).requestFocus();
                             return true;
                         }
                     } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
                         if (posInRow < totalInRow - 1) {
-                            currentRow.getChildAt(posInRow + 1).requestFocus();
+                            tileViews.get(globalIndex + 1).requestFocus();
                             return true;
                         }
                     } else if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
@@ -441,18 +441,7 @@ public class MainActivity extends Activity {
                             int prevCol = posInRow;
                             int prevGlobalIndex = prevRowIndex * columns + prevCol;
                             if (prevGlobalIndex < tileViews.size()) {
-                                View prevTile = tileViews.get(prevGlobalIndex);
-                                // 找到 prevTile 所在的 row
-                                for (int r = 0; r < appsFlow.getChildCount(); r++) {
-                                    View row = appsFlow.getChildAt(r);
-                                    if (row instanceof LinearLayout) {
-                                        int idx = ((LinearLayout) row).indexOfChild(prevTile);
-                                        if (idx >= 0) {
-                                            prevTile.requestFocus();
-                                            break;
-                                        }
-                                    }
-                                }
+                                tileViews.get(prevGlobalIndex).requestFocus();
                                 return true;
                             }
                         }
