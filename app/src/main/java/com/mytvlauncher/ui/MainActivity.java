@@ -287,7 +287,7 @@ public class MainActivity extends Activity {
     }
 
     private GradientDrawable glassDockBackground() {
-        GradientDrawable bg = new GradientDrawable(GradientDrawable.Direction.TOP_BOTTOM,
+        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                 new int[]{
                         Color.argb(200, 255, 255, 255),
                         Color.argb(140, 180, 200, 220)
@@ -553,8 +553,9 @@ public class MainActivity extends Activity {
                         for (int r = 0; r < ((LinearLayout) flow).getChildCount(); r++) {
                             View row = ((LinearLayout) flow).getChildAt(r);
                             if (row instanceof LinearLayout) {
-                                for (int c = 0; c < row.getChildCount(); c++) {
-                                    View tile = row.getChildAt(c);
+                                LinearLayout llRow = (LinearLayout) row;
+                                for (int c = 0; c < llRow.getChildCount(); c++) {
+                                    View tile = llRow.getChildAt(c);
                                     tile.animate()
                                             .setStartDelay(r * 15 + c * 8)
                                             .alpha(0f)
@@ -599,7 +600,7 @@ public class MainActivity extends Activity {
     }
 
     private GradientDrawable drawerBackground() {
-        GradientDrawable bg = new GradientDrawable(GradientDrawable.Direction.TOP_BOTTOM,
+        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                 new int[]{
                         Color.argb(240, 30, 38, 55),
                         Color.argb(250, 20, 26, 38)
@@ -966,7 +967,7 @@ public class MainActivity extends Activity {
     }
 
     private GradientDrawable weatherDetailWash() {
-        GradientDrawable bg = new GradientDrawable(GradientDrawable.Direction.TL_BR,
+        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 new int[]{
                         Color.argb(175, 70, 120, 155),
                         Color.argb(130, 90, 135, 165),
@@ -977,7 +978,7 @@ public class MainActivity extends Activity {
     }
 
     private GradientDrawable weatherForecastBackground() {
-        GradientDrawable bg = new GradientDrawable(GradientDrawable.Direction.TOP_BOTTOM,
+        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                 new int[]{
                         Color.argb(140, 120, 165, 185),
                         Color.argb(130, 85, 130, 155)
@@ -2027,7 +2028,7 @@ public class MainActivity extends Activity {
             start = Color.rgb(245, 248, 252);
             end = Color.rgb(220, 235, 250);
         }
-        GradientDrawable bg = new GradientDrawable(GradientDrawable.Direction.TOP_START, new int[]{start, end});
+        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{start, end});
         bg.setCornerRadius(dp(16));
         return bg;
     }
@@ -2688,7 +2689,7 @@ public class MainActivity extends Activity {
             start = Color.rgb(245, 248, 252);
             end = Color.rgb(220, 235, 250);
         }
-        GradientDrawable bg = new GradientDrawable(GradientDrawable.Direction.TOP_START, new int[]{start, end});
+        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{start, end});
         bg.setCornerRadius(dp(6));
         return bg;
     }
@@ -3413,8 +3414,8 @@ public class MainActivity extends Activity {
 
     private GradientDrawable gradientDrawable(GradientPreset preset, boolean selected, boolean focused) {
         GradientDrawable.Direction orientation = preset.vertical
-                ? GradientDrawable.Direction.TOP_BOTTOM
-                : GradientDrawable.Direction.TL_BR;
+                ? GradientDrawable.Orientation.TOP_BOTTOM
+                : GradientDrawable.Orientation.TL_BR;
         GradientDrawable bg = new GradientDrawable(orientation, preset.colors);
         bg.setCornerRadius(dp(16));
         bg.setStroke(focused ? dp(3) : (selected ? dp(2) : dp(1)),
