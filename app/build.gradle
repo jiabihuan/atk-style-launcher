@@ -21,8 +21,8 @@ android {
         applicationId "com.mytvlauncher"
         minSdk 24
         targetSdk 35
-        versionCode 60
-        versionName "1.5.36-open-source"
+        versionCode 61
+        versionName "1.5.37-open-source"
     }
 
     buildTypes {

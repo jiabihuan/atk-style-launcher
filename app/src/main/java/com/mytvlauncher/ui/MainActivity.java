@@ -43,7 +43,6 @@ import android.view.accessibility.AccessibilityManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -73,12 +72,11 @@ public class MainActivity extends Activity {
     private static final int REQ_IMAGE = 40;
     private static final int REQ_VIDEO = 41;
     private static final int REQ_HOME_ROLE = 42;
-    private static final int CURRENT_VERSION_CODE = 60;
+    private static final int CURRENT_VERSION_CODE = 62;
 
     private SharedPreferences prefs;
-    private GridLayout appsGrid;
+    private LinearLayout appsFlow;
     private FrameLayout launcherRoot;
-    private ScrollView homeScroll;
     private View searchPill;
     private VideoView currentVideoBackground;
     private FrameLayout folderOverlay;
@@ -240,8 +238,7 @@ public class MainActivity extends Activity {
         currentVideoBackground = null;
         FrameLayout root = new FrameLayout(this);
         launcherRoot = root;
-        root.setClipChildren(false);
-        root.setClipToPadding(false);
+
         addBackground(root);
 
         View topWash = new View(this);
@@ -250,8 +247,6 @@ public class MainActivity extends Activity {
 
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
-        content.setClipChildren(false);
-        content.setClipToPadding(false);
         root.addView(content, new FrameLayout.LayoutParams(-1, -1));
 
         if (!prefs.getBoolean("minimal_status", false)) {
@@ -259,8 +254,6 @@ public class MainActivity extends Activity {
         }
 
         FrameLayout mainArea = new FrameLayout(this);
-        mainArea.setClipChildren(false);
-        mainArea.setClipToPadding(false);
         LinearLayout.LayoutParams mainLp = new LinearLayout.LayoutParams(-1, 0);
         mainLp.weight = 1;
         content.addView(mainArea, mainLp);
@@ -269,8 +262,6 @@ public class MainActivity extends Activity {
         heroArea.setOrientation(LinearLayout.HORIZONTAL);
         heroArea.setGravity(Gravity.TOP | Gravity.START);
         heroArea.setPadding(dp(54), dp(18), dp(54), 0);
-        heroArea.setClipChildren(false);
-        heroArea.setClipToPadding(false);
         mainArea.addView(heroArea, new FrameLayout.LayoutParams(-1, -2));
 
         if (!prefs.getBoolean("hide_featured", false)) {
@@ -280,17 +271,14 @@ public class MainActivity extends Activity {
         LinearLayout bottomDockArea = new LinearLayout(this);
         bottomDockArea.setOrientation(LinearLayout.VERTICAL);
         bottomDockArea.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
-        bottomDockArea.setClipChildren(false);
-        bottomDockArea.setClipToPadding(false);
         mainArea.addView(bottomDockArea, new FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM));
 
         dockRow = new LinearLayout(this);
         dockRow.setOrientation(LinearLayout.HORIZONTAL);
         dockRow.setGravity(Gravity.CENTER);
-        dockRow.setPadding(dp(16), dp(8), dp(16), dp(10));
-        dockRow.setClipChildren(false);
-        dockRow.setClipToPadding(false);
+        dockRow.setPadding(dp(20), dp(10), dp(20), dp(14));
         dockRow.setBackgroundColor(Color.TRANSPARENT);
+        dockRow.setBackground(glassDockBackground());
         bottomDockArea.addView(dockRow, new LinearLayout.LayoutParams(-2, -2));
 
         loadDockApps();
@@ -300,11 +288,11 @@ public class MainActivity extends Activity {
     private GradientDrawable glassDockBackground() {
         GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                 new int[]{
-                        Color.argb(180, 255, 255, 255),
-                        Color.argb(120, 200, 210, 220)
+                        Color.argb(200, 255, 255, 255),
+                        Color.argb(140, 180, 200, 220)
                 });
-        bg.setCornerRadius(dp(24));
-        bg.setStroke(dp(1), Color.argb(60, 255, 255, 255));
+        bg.setCornerRadius(dp(28));
+        bg.setStroke(dp(1), Color.argb(80, 255, 255, 255));
         return bg;
     }
 
@@ -375,130 +363,173 @@ public class MainActivity extends Activity {
 
         appDrawerOverlay = new FrameLayout(this);
         appDrawerOverlay.setBackgroundColor(Color.argb(0, 0, 0, 0));
-        appDrawerOverlay.setClipChildren(false);
-        appDrawerOverlay.setClipToPadding(false);
 
         FrameLayout drawerContainer = new FrameLayout(this);
-        drawerContainer.setClipChildren(false);
-        drawerContainer.setClipToPadding(false);
         FrameLayout.LayoutParams drawerLp = new FrameLayout.LayoutParams(-1, -2);
         drawerLp.gravity = Gravity.BOTTOM;
         appDrawerOverlay.addView(drawerContainer, drawerLp);
 
         LinearLayout drawer = new LinearLayout(this);
         drawer.setOrientation(LinearLayout.VERTICAL);
-        drawer.setPadding(dp(40), dp(18), dp(40), dp(32));
-        drawer.setClipChildren(false);
-        drawer.setClipToPadding(false);
+        drawer.setPadding(dp(54), dp(24), dp(54), dp(40));
         drawer.setBackground(drawerBackground());
         drawerContainer.addView(drawer, new FrameLayout.LayoutParams(-1, -2));
 
         TextView drawerTitle = new TextView(this);
         drawerTitle.setText("所有应用");
-        drawerTitle.setTextColor(Color.WHITE);
-        drawerTitle.setTextSize(22);
+        drawerTitle.setTextColor(Color.argb(255, 255, 255, 255));
+        drawerTitle.setTextSize(24);
         drawerTitle.setTypeface(Typeface.DEFAULT_BOLD);
-        drawerTitle.setPadding(0, 0, 0, dp(10));
+        drawerTitle.setPadding(0, 0, 0, dp(14));
         drawer.addView(drawerTitle, new LinearLayout.LayoutParams(-1, -2));
 
         ScrollView drawerScroll = new ScrollView(this);
         drawerScroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        drawerScroll.setClipChildren(false);
-        drawerScroll.setClipToPadding(false);
-        drawer.addView(drawerScroll, new LinearLayout.LayoutParams(-1, dp(380)));
+        drawer.addView(drawerScroll, new LinearLayout.LayoutParams(-1, dp(460)));
 
-        GridLayout drawerGrid = new GridLayout(this);
-        drawerGrid.setColumnCount(6);
-        drawerGrid.setClipChildren(false);
-        drawerGrid.setClipToPadding(false);
-        drawerScroll.addView(drawerGrid, new ScrollView.LayoutParams(-1, -2));
+        // 使用 LinearLayout 垂直排列行，每行是一个横向 LinearLayout
+        appsFlow = new LinearLayout(this);
+        appsFlow.setOrientation(LinearLayout.VERTICAL);
+        drawerScroll.addView(appsFlow, new ScrollView.LayoutParams(-1, -2));
 
         PackageManager pm = getPackageManager();
         List<AppEntry> allApps = buildDisplayEntries(queryLaunchableApps(pm));
-        int cellWidth = dp(150);
+        int columns = appsPerRow();
+        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+        int rowPadding = dp(54) * 2;
+        int cellWidth = Math.max(dp(160), (screenWidth - rowPadding) / columns);
+        int cellHeight = Math.round(cellWidth * 9f / 16f) + dp(30);
+
         List<View> tileViews = new ArrayList<>();
-        for (AppEntry entry : allApps) {
+        LinearLayout currentRow = null;
+
+        for (int i = 0; i < allApps.size(); i++) {
+            AppEntry entry = allApps.get(i);
             View tile = createAppTile(pm, entry, cellWidth);
-            GridLayout.LayoutParams gridLp = new GridLayout.LayoutParams();
-            gridLp.width = cellWidth;
-            gridLp.height = dp(prefs.getBoolean("hide_app_titles", false) ? 116 : 150);
-            gridLp.setMargins(dp(4), dp(6), dp(4), dp(6));
-            tile.setLayoutParams(gridLp);
+            tileViews.add(tile);
+
+            if (currentRow == null) {
+                currentRow = new LinearLayout(this);
+                currentRow.setOrientation(LinearLayout.HORIZONTAL);
+                currentRow.setGravity(Gravity.CENTER_VERTICAL);
+                currentRow.setPadding(0, dp(4), 0, dp(4));
+            }
+
+            LinearLayout.LayoutParams tileLp = new LinearLayout.LayoutParams(cellWidth, cellHeight);
+            tileLp.setMargins(dp(6), 0, dp(6), 0);
+            tile.setLayoutParams(tileLp);
+
             tile.setOnKeyListener((v, keyCode, event) -> {
                 if (event.getAction() == KeyEvent.ACTION_DOWN) {
-                    if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
-                        int idx = drawerGrid.indexOfChild(v);
-                        if (idx < 6) {
-                            closeAppDrawer();
+                    int posInRow = currentRow.indexOfChild(v);
+                    int totalInRow = currentRow.getChildCount();
+                    int globalIndex = tileViews.indexOf(v);
+                    if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+                        if (posInRow > 0) {
+                            currentRow.getChildAt(posInRow - 1).requestFocus();
                             return true;
                         }
-                    }
-                    if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                        if (posInRow < totalInRow - 1) {
+                            currentRow.getChildAt(posInRow + 1).requestFocus();
+                            return true;
+                        }
+                    } else if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                        int prevRowIndex = (globalIndex / columns) - 1;
+                        if (prevRowIndex >= 0) {
+                            int prevCol = posInRow;
+                            int prevGlobalIndex = prevRowIndex * columns + prevCol;
+                            if (prevGlobalIndex < tileViews.size()) {
+                                View prevTile = tileViews.get(prevGlobalIndex);
+                                // 找到 prevTile 所在的 row
+                                for (int r = 0; r < appsFlow.getChildCount(); r++) {
+                                    View row = appsFlow.getChildAt(r);
+                                    if (row instanceof LinearLayout) {
+                                        int idx = ((LinearLayout) row).indexOfChild(prevTile);
+                                        if (idx >= 0) {
+                                            prevTile.requestFocus();
+                                            break;
+                                        }
+                                    }
+                                }
+                                return true;
+                            }
+                        }
+                        // 上移到 dock
+                        closeAppDrawer();
+                        return true;
+                    } else if (keyCode == KeyEvent.KEYCODE_BACK) {
                         closeAppDrawer();
                         return true;
                     }
                 }
                 return false;
             });
-            drawerGrid.addView(tile);
-            tileViews.add(tile);
+
+            currentRow.addView(tile, tileLp);
+
+            if ((i + 1) % columns == 0) {
+                appsFlow.addView(currentRow, new LinearLayout.LayoutParams(-1, cellHeight));
+                currentRow = null;
+            }
+        }
+
+        // 处理最后一行不完整的
+        if (currentRow != null && currentRow.getChildCount() > 0) {
+            appsFlow.addView(currentRow, new LinearLayout.LayoutParams(-1, cellHeight));
         }
 
         appDrawerOverlay.setOnClickListener(v -> closeAppDrawer());
         launcherRoot.addView(appDrawerOverlay, new FrameLayout.LayoutParams(-1, -1));
 
-        drawer.setTranslationY(dp(600));
+        drawer.setTranslationY(dp(700));
         drawer.setAlpha(0f);
         drawerTitle.setAlpha(0f);
         for (View tile : tileViews) {
             tile.setAlpha(0f);
-            tile.setTranslationY(dp(120));
-            tile.setScaleY(0.6f);
-            tile.setPivotY(1f);
+            tile.setTranslationY(dp(40));
         }
 
         appDrawerOverlay.setBackgroundColor(Color.argb(0, 0, 0, 0));
         drawer.animate()
                 .translationY(0)
                 .alpha(1f)
-                .setDuration(340)
+                .setDuration(300)
                 .setInterpolator(new android.view.animation.DecelerateInterpolator(0.9f))
                 .start();
         drawerTitle.animate()
-                .setStartDelay(60)
+                .setStartDelay(50)
                 .alpha(1f)
                 .setDuration(200)
                 .start();
 
         for (int i = 0; i < tileViews.size(); i++) {
             View tile = tileViews.get(i);
-            int row = i / 6;
-            int col = i % 6;
-            int delay = 70 + row * 35 + (5 - col) * 8;
+            int row = i / columns;
+            int delay = 40 + row * 25;
             tile.animate()
                     .setStartDelay(delay)
                     .alpha(1f)
                     .translationY(0)
-                    .scaleY(1f)
-                    .setDuration(280)
-                    .setInterpolator(new android.view.animation.DecelerateInterpolator(1.3f))
+                    .setDuration(220)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator(1.2f))
                     .start();
         }
 
         appDrawerOverlay.animate()
-                .setStartDelay(20)
-                .setDuration(240)
+                .setStartDelay(10)
+                .setDuration(200)
                 .setUpdateListener(animation -> {
                     float frac = animation.getAnimatedFraction();
-                    appDrawerOverlay.setBackgroundColor(Color.argb((int) (frac * 130), 0, 0, 0));
+                    appDrawerOverlay.setBackgroundColor(Color.argb((int) (frac * 140), 0, 0, 0));
                 })
                 .start();
 
         drawer.postDelayed(() -> {
-            if (drawerGrid.getChildCount() > 0) {
-                drawerGrid.getChildAt(0).requestFocus();
+            if (tileViews.size() > 0) {
+                tileViews.get(0).requestFocus();
             }
-        }, 260);
+        }, 220);
     }
 
     private void closeAppDrawer() {
@@ -516,37 +547,37 @@ public class MainActivity extends Activity {
             if (drawerLl.getChildCount() >= 2) {
                 View scroll = drawerLl.getChildAt(1);
                 if (scroll instanceof ScrollView && ((ScrollView) scroll).getChildCount() > 0) {
-                    View grid = ((ScrollView) scroll).getChildAt(0);
-                    if (grid instanceof GridLayout) {
-                        GridLayout gridLayout = (GridLayout) grid;
-                        for (int i = 0; i < gridLayout.getChildCount(); i++) {
-                            View tile = gridLayout.getChildAt(i);
-                            int row = i / 6;
-                            int col = i % 6;
-                            int delay = row * 20 + (5 - col) * 5;
-                            tile.animate()
-                                    .setStartDelay(delay)
-                                    .alpha(0f)
-                                    .translationY(dp(60))
-                                    .scaleY(0.7f)
-                                    .setDuration(180)
-                                    .setInterpolator(new android.view.animation.AccelerateInterpolator(1.2f))
-                                    .start();
+                    View flow = ((ScrollView) scroll).getChildAt(0);
+                    if (flow instanceof LinearLayout) {
+                        for (int r = 0; r < ((LinearLayout) flow).getChildCount(); r++) {
+                            View row = ((LinearLayout) flow).getChildAt(r);
+                            if (row instanceof LinearLayout) {
+                                for (int c = 0; c < row.getChildCount(); c++) {
+                                    View tile = row.getChildAt(c);
+                                    tile.animate()
+                                            .setStartDelay(r * 15 + c * 8)
+                                            .alpha(0f)
+                                            .translationY(dp(40))
+                                            .setDuration(160)
+                                            .setInterpolator(new android.view.animation.AccelerateInterpolator(1.2f))
+                                            .start();
+                                }
+                            }
                         }
                     }
                 }
             }
             drawerLl.animate()
-                    .setStartDelay(80)
-                    .translationY(dp(500))
+                    .setStartDelay(60)
+                    .translationY(dp(600))
                     .alpha(0f)
-                    .setDuration(240)
+                    .setDuration(220)
                     .setInterpolator(new android.view.animation.AccelerateInterpolator(1.1f))
                     .start();
         }
 
         appDrawerOverlay.animate()
-                .setDuration(220)
+                .setDuration(200)
                 .setUpdateListener(animation -> {
                     float frac = 1f - animation.getAnimatedFraction();
                     appDrawerOverlay.setBackgroundColor(Color.argb((int) (frac * 130), 0, 0, 0));
@@ -569,10 +600,10 @@ public class MainActivity extends Activity {
     private GradientDrawable drawerBackground() {
         GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                 new int[]{
-                        Color.argb(230, 40, 45, 55),
-                        Color.argb(245, 25, 28, 36)
+                        Color.argb(240, 30, 38, 55),
+                        Color.argb(250, 20, 26, 38)
                 });
-        bg.setCornerRadii(new float[]{dp(28), dp(28), dp(28), dp(28), 0, 0, 0, 0});
+        bg.setCornerRadii(new float[]{dp(30), dp(30), dp(30), dp(30), 0, 0, 0, 0});
         return bg;
     }
 
@@ -683,34 +714,36 @@ public class MainActivity extends Activity {
         TextClock clock = new TextClock(this);
         clock.setFormat12Hour("h:mm a");
         clock.setFormat24Hour(prefs.getBoolean("use_24h", true) ? "HH:mm" : "h:mm a");
-        clock.setTextColor(Color.WHITE);
-        clock.setTextSize(20);
+        clock.setTextColor(Color.argb(255, 255, 255, 255));
+        clock.setTextSize(22);
         clock.setTypeface(Typeface.DEFAULT_BOLD);
         clock.setIncludeFontPadding(false);
         clock.setGravity(Gravity.CENTER);
+        clock.setShadowLayer(dp(3), 0, dp(1), Color.argb(160, 0, 0, 0));
         card.addView(clock, new LinearLayout.LayoutParams(-1, -2));
 
         weatherIconView = new ImageView(this);
         weatherIconView.setImageResource(R.drawable.ic_weather_clouds);
         weatherIconView.setScaleType(ImageView.ScaleType.FIT_XY);
-        LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(dp(96), dp(48));
-        iconLp.topMargin = dp(2);
-        iconLp.bottomMargin = dp(2);
+        LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(dp(108), dp(54));
+        iconLp.topMargin = dp(3);
+        iconLp.bottomMargin = dp(3);
         card.addView(weatherIconView, iconLp);
 
         weatherTempView = new TextView(this);
         weatherTempView.setText("--°");
-        weatherTempView.setTextColor(Color.WHITE);
-        weatherTempView.setTextSize(18);
+        weatherTempView.setTextColor(Color.argb(255, 255, 255, 255));
+        weatherTempView.setTextSize(20);
         weatherTempView.setTypeface(Typeface.DEFAULT_BOLD);
         weatherTempView.setSingleLine(true);
         weatherTempView.setGravity(Gravity.CENTER);
+        weatherTempView.setShadowLayer(dp(3), 0, dp(1), Color.argb(160, 0, 0, 0));
         card.addView(weatherTempView, new LinearLayout.LayoutParams(-1, -2));
 
         weatherCityView = new TextView(this);
         weatherCityView.setText("定位中...");
-        weatherCityView.setTextColor(Color.argb(200, 255, 255, 255));
-        weatherCityView.setTextSize(12);
+        weatherCityView.setTextColor(Color.argb(210, 255, 255, 255));
+        weatherCityView.setTextSize(13);
         weatherCityView.setSingleLine(true);
         weatherCityView.setEllipsize(TextUtils.TruncateAt.END);
         weatherCityView.setGravity(Gravity.CENTER);
@@ -759,8 +792,8 @@ public class MainActivity extends Activity {
 
         TextView title = new TextView(this);
         title.setText("天气");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(30);
+        title.setTextColor(Color.argb(255, 255, 255, 255));
+        title.setTextSize(32);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         top.addView(title, new LinearLayout.LayoutParams(0, -1, 1));
 
@@ -768,7 +801,7 @@ public class MainActivity extends Activity {
         clock.setFormat12Hour("h:mm");
         clock.setFormat24Hour(prefs.getBoolean("use_24h", true) ? "HH:mm" : "h:mm");
         clock.setGravity(Gravity.CENTER);
-        clock.setTextColor(Color.WHITE);
+        clock.setTextColor(Color.argb(255, 255, 255, 255));
         clock.setTextSize(24);
         clock.setTypeface(Typeface.DEFAULT_BOLD);
         clock.setBackgroundResource(R.drawable.glass_chip);
@@ -796,10 +829,10 @@ public class MainActivity extends Activity {
 
         TextView city = new TextView(this);
         city.setText(savedCity);
-        city.setTextColor(Color.argb(220, 255, 255, 255));
-        city.setTextSize(19);
+        city.setTextColor(Color.argb(235, 255, 255, 255));
+        city.setTextSize(20);
         city.setIncludeFontPadding(false);
-        city.setShadowLayer(dp(2), 0, dp(1), Color.argb(120, 0, 0, 0));
+        city.setShadowLayer(dp(3), 0, dp(1), Color.argb(140, 0, 0, 0));
         summary.addView(city, new LinearLayout.LayoutParams(-1, dp(30)));
 
         LinearLayout headline = new LinearLayout(this);
@@ -810,11 +843,11 @@ public class MainActivity extends Activity {
 
         TextView temp = new TextView(this);
         temp.setText(savedTemp + "°C");
-        temp.setTextColor(Color.WHITE);
-        temp.setTextSize(78);
+        temp.setTextColor(Color.argb(255, 255, 255, 255));
+        temp.setTextSize(82);
         temp.setTypeface(Typeface.DEFAULT_BOLD);
         temp.setIncludeFontPadding(false);
-        temp.setShadowLayer(dp(4), 0, dp(3), Color.argb(120, 0, 0, 0));
+        temp.setShadowLayer(dp(5), 0, dp(3), Color.argb(140, 0, 0, 0));
         headline.addView(temp, new LinearLayout.LayoutParams(-2, -1));
 
         ImageView detailIcon = new ImageView(this);
@@ -827,12 +860,12 @@ public class MainActivity extends Activity {
 
         TextView condition = new TextView(this);
         condition.setText(conditionText);
-        condition.setTextColor(Color.WHITE);
-        condition.setTextSize(30);
+        condition.setTextColor(Color.argb(255, 255, 255, 255));
+        condition.setTextSize(32);
         condition.setTypeface(Typeface.DEFAULT_BOLD);
         condition.setSingleLine(true);
         condition.setIncludeFontPadding(false);
-        condition.setShadowLayer(dp(3), 0, dp(2), Color.argb(120, 0, 0, 0));
+        condition.setShadowLayer(dp(4), 0, dp(2), Color.argb(140, 0, 0, 0));
         headline.addView(condition, new LinearLayout.LayoutParams(0, -1, 1));
 
         LinearLayout metricLine1 = new LinearLayout(this);
@@ -934,9 +967,9 @@ public class MainActivity extends Activity {
     private GradientDrawable weatherDetailWash() {
         GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
                 new int[]{
-                        Color.argb(165, 94, 146, 160),
-                        Color.argb(120, 113, 158, 172),
-                        Color.argb(75, 44, 72, 82)
+                        Color.argb(175, 70, 120, 155),
+                        Color.argb(130, 90, 135, 165),
+                        Color.argb(85, 40, 65, 80)
                 });
         bg.setCornerRadius(dp(0));
         return bg;
@@ -945,23 +978,23 @@ public class MainActivity extends Activity {
     private GradientDrawable weatherForecastBackground() {
         GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                 new int[]{
-                        Color.argb(128, 130, 174, 188),
-                        Color.argb(116, 72, 119, 136)
+                        Color.argb(140, 120, 165, 185),
+                        Color.argb(130, 85, 130, 155)
                 });
-        bg.setCornerRadius(dp(16));
-        bg.setStroke(dp(1), Color.argb(32, 255, 255, 255));
+        bg.setCornerRadius(dp(18));
+        bg.setStroke(dp(1), Color.argb(40, 255, 255, 255));
         return bg;
     }
 
     private void addWeatherInfo(LinearLayout parent, String text) {
         TextView item = new TextView(this);
         item.setText(text);
-        item.setTextColor(Color.argb(230, 255, 255, 255));
-        item.setTextSize(18);
+        item.setTextColor(Color.argb(240, 255, 255, 255));
+        item.setTextSize(19);
         item.setGravity(Gravity.CENTER_VERTICAL);
         item.setSingleLine(true);
         item.setIncludeFontPadding(false);
-        item.setShadowLayer(dp(2), 0, dp(1), Color.argb(110, 0, 0, 0));
+        item.setShadowLayer(dp(3), 0, dp(1), Color.argb(130, 0, 0, 0));
         parent.addView(item, new LinearLayout.LayoutParams(0, -1, 1));
     }
 
@@ -1001,7 +1034,7 @@ public class MainActivity extends Activity {
         dayView.setTypeface(Typeface.DEFAULT_BOLD);
         dayView.setGravity(Gravity.CENTER);
         dayView.setIncludeFontPadding(false);
-        dayView.setShadowLayer(dp(2), 0, dp(1), Color.argb(115, 0, 0, 0));
+        dayView.setShadowLayer(dp(3), 0, dp(1), Color.argb(130, 0, 0, 0));
         tile.addView(dayView, new LinearLayout.LayoutParams(-1, dp(24)));
         ImageView icon = new ImageView(this);
         icon.setImageResource(wmoCodeToIcon(wmoCode));
@@ -1015,7 +1048,7 @@ public class MainActivity extends Activity {
         tempView.setGravity(Gravity.CENTER);
         tempView.setSingleLine(true);
         tempView.setIncludeFontPadding(false);
-        tempView.setShadowLayer(dp(2), 0, dp(1), Color.argb(115, 0, 0, 0));
+        tempView.setShadowLayer(dp(3), 0, dp(1), Color.argb(130, 0, 0, 0));
         tile.addView(tempView, new LinearLayout.LayoutParams(-1, dp(24)));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, -1, 1);
         lp.leftMargin = dp(4);
@@ -1169,7 +1202,7 @@ public class MainActivity extends Activity {
         showingSettings = true;
         showingWeatherDetails = false;
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(Color.rgb(52, 52, 52));
+        root.setBackgroundColor(Color.argb(245, 12, 18, 28));
         root.setClipChildren(false);
         root.setClipToPadding(false);
 
@@ -1187,9 +1220,9 @@ public class MainActivity extends Activity {
         page.addView(menu, new LinearLayout.LayoutParams(dp(396), -1));
 
         TextView title = new TextView(this);
-        title.setText("设置");
-        title.setTextColor(Color.argb(120, 255, 255, 255));
-        title.setTextSize(36);
+        title.setText("星河桌面");
+        title.setTextColor(Color.argb(130, 255, 255, 255));
+        title.setTextSize(38);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         LinearLayout.LayoutParams titleLp = new LinearLayout.LayoutParams(-1, -2);
         titleLp.bottomMargin = dp(28);
@@ -1321,24 +1354,52 @@ public class MainActivity extends Activity {
     }
 
     private void loadApps() {
-        if (appsGrid == null) return;
+        if (appsFlow == null) return;
         PackageManager pm = getPackageManager();
         List<AppEntry> entries = buildDisplayEntries(queryLaunchableApps(pm));
         applySavedDisplayOrder(entries);
-        appsGrid.removeAllViews();
+        appsFlow.removeAllViews();
 
         int columns = appsPerRow();
-        int gridWidth = getResources().getDisplayMetrics().widthPixels - dp(108);
-        int cellWidth = Math.max(dp(150), gridWidth / columns);
-        appsGrid.setColumnCount(columns);
+        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+        int rowPadding = dp(54) * 2;
+        int cellWidth = Math.max(dp(160), (screenWidth - rowPadding) / columns);
+        int cellHeight = Math.round(cellWidth * 9f / 16f) + dp(30);
 
-        for (AppEntry entry : entries) {
-            appsGrid.addView(createAppTile(pm, entry, cellWidth));
+        List<View> tileViews = new ArrayList<>();
+        LinearLayout currentRow = null;
+
+        for (int i = 0; i < entries.size(); i++) {
+            AppEntry entry = entries.get(i);
+            View tile = createAppTile(pm, entry, cellWidth);
+            tileViews.add(tile);
+
+            if (currentRow == null) {
+                currentRow = new LinearLayout(this);
+                currentRow.setOrientation(LinearLayout.HORIZONTAL);
+                currentRow.setGravity(Gravity.CENTER_VERTICAL);
+                currentRow.setPadding(0, dp(4), 0, dp(4));
+            }
+
+            LinearLayout.LayoutParams tileLp = new LinearLayout.LayoutParams(cellWidth, cellHeight);
+            tileLp.setMargins(dp(6), 0, dp(6), 0);
+            tile.setLayoutParams(tileLp);
+            currentRow.addView(tile);
+
+            if ((i + 1) % columns == 0) {
+                appsFlow.addView(currentRow, new LinearLayout.LayoutParams(-1, cellHeight));
+                currentRow = null;
+            }
         }
+
+        if (currentRow != null && currentRow.getChildCount() > 0) {
+            appsFlow.addView(currentRow, new LinearLayout.LayoutParams(-1, cellHeight));
+        }
+
         if (!TextUtils.isEmpty(focusAfterLoadPackage)) {
             String focusPackage = focusAfterLoadPackage;
             focusAfterLoadPackage = null;
-            appsGrid.post(() -> focusAppTile(focusPackage));
+            appsFlow.post(() -> focusAppTile(focusPackage));
         }
     }
 
@@ -1350,7 +1411,7 @@ public class MainActivity extends Activity {
         dialog.setCanceledOnTouchOutside(true);
 
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(Color.argb(215, 8, 10, 14));
+        root.setBackgroundColor(Color.argb(230, 10, 14, 22));
         root.setPadding(dp(56), dp(48), dp(56), dp(42));
 
         LinearLayout panel = new LinearLayout(this);
@@ -1361,8 +1422,8 @@ public class MainActivity extends Activity {
 
         TextView title = new TextView(this);
         title.setText("搜索应用商店");
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(30);
+        title.setTextColor(Color.argb(255, 255, 255, 255));
+        title.setTextSize(32);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         panel.addView(title, new LinearLayout.LayoutParams(-1, dp(46)));
 
@@ -1377,7 +1438,7 @@ public class MainActivity extends Activity {
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
         input.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH);
         input.setBackground(actionButtonBackground(false, false));
-        input.setPadding(dp(18), 0, dp(18), 0);
+        input.setPadding(dp(20), 0, dp(20), 0);
         input.setOnClickListener(v -> showKeyboard(input));
         input.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) input.postDelayed(() -> showKeyboard(input), 80);
@@ -1570,14 +1631,19 @@ public class MainActivity extends Activity {
     }
 
     private void focusAppTile(String packageName) {
-        if (appsGrid == null || TextUtils.isEmpty(packageName)) return;
-        for (int i = 0; i < appsGrid.getChildCount(); i++) {
-            View cell = appsGrid.getChildAt(i);
-            Object tag = cell.getTag();
-            if (TextUtils.equals(packageName, tag == null ? null : tag.toString()) && cell instanceof LinearLayout) {
-                LinearLayout layout = (LinearLayout) cell;
-                if (layout.getChildCount() > 0) layout.getChildAt(0).requestFocus();
-                return;
+        if (appsFlow == null || TextUtils.isEmpty(packageName)) return;
+        for (int r = 0; r < appsFlow.getChildCount(); r++) {
+            View row = appsFlow.getChildAt(r);
+            if (!(row instanceof LinearLayout)) continue;
+            LinearLayout llRow = (LinearLayout) row;
+            for (int i = 0; i < llRow.getChildCount(); i++) {
+                View cell = llRow.getChildAt(i);
+                Object tag = cell.getTag();
+                if (TextUtils.equals(packageName, tag == null ? null : tag.toString()) && cell instanceof LinearLayout) {
+                    LinearLayout layout = (LinearLayout) cell;
+                    if (layout.getChildCount() > 0) layout.getChildAt(0).requestFocus();
+                    return;
+                }
             }
         }
     }
@@ -1824,10 +1890,8 @@ public class MainActivity extends Activity {
         cell.setClipToPadding(false);
         cell.setTag(entry.packageName);
 
-        GridLayout.LayoutParams gridLp = new GridLayout.LayoutParams();
-        gridLp.width = cellWidth;
-        gridLp.height = dp(prefs.getBoolean("hide_app_titles", false) ? 116 : 150);
-        cell.setLayoutParams(gridLp);
+        LinearLayout.LayoutParams tileLp = new LinearLayout.LayoutParams(cellWidth, dp(prefs.getBoolean("hide_app_titles", false) ? 116 : 150));
+        cell.setLayoutParams(tileLp);
 
         boolean hasBanner = !entry.isFolder && entry.banner != null;
         boolean colorCard = !entry.isFolder && !hasBanner;
@@ -1866,12 +1930,13 @@ public class MainActivity extends Activity {
             TextView cardLabel = new TextView(this);
             cardLabel.setText(entry.label);
             cardLabel.setTextColor(readableTextColor(baseColor));
-            cardLabel.setTextSize(15);
+            cardLabel.setTextSize(16);
             cardLabel.setTypeface(Typeface.DEFAULT_BOLD);
             cardLabel.setGravity(Gravity.CENTER_VERTICAL);
             cardLabel.setSingleLine(true);
             cardLabel.setMaxLines(1);
             cardLabel.setEllipsize(TextUtils.TruncateAt.END);
+            cardLabel.setShadowLayer(dp(2), 0, dp(1), Color.argb(100, 0, 0, 0));
             FrameLayout.LayoutParams textLp = new FrameLayout.LayoutParams(-1, -2, Gravity.CENTER_VERTICAL);
             textLp.leftMargin = iconSize + dp(18);
             card.addView(cardLabel, textLp);
@@ -1881,14 +1946,15 @@ public class MainActivity extends Activity {
         boolean showTitleBelow = !prefs.getBoolean("hide_app_titles", false);
         if (showTitleBelow) {
             label.setText(entry.label);
-            label.setTextColor(Color.argb(222, 255, 255, 255));
+            label.setTextColor(Color.argb(230, 255, 255, 255));
             label.setTextSize(16);
             label.setTypeface(Typeface.DEFAULT_BOLD);
             label.setGravity(Gravity.CENTER);
             label.setSingleLine(true);
             label.setEllipsize(TextUtils.TruncateAt.END);
-            LinearLayout.LayoutParams labelLp = new LinearLayout.LayoutParams(cardWidth, dp(25));
-            labelLp.topMargin = dp(4);
+            label.setShadowLayer(dp(3), 0, dp(1), Color.argb(160, 0, 0, 0));
+            LinearLayout.LayoutParams labelLp = new LinearLayout.LayoutParams(cardWidth, dp(28));
+            labelLp.topMargin = dp(6);
             cell.addView(label, labelLp);
         }
 
@@ -1933,9 +1999,9 @@ public class MainActivity extends Activity {
         });
         card.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) keepFocusedCardFullyVisible(v);
-            animateFocus(v, hasFocus, 1.08f);
+            animateFocus(v, hasFocus, 1.09f);
             if (showTitleBelow) {
-                label.setTextColor(hasFocus ? Color.WHITE : Color.argb(222, 255, 255, 255));
+                label.setTextColor(hasFocus ? Color.WHITE : Color.argb(230, 255, 255, 255));
                 label.setShadowLayer(hasFocus ? dp(4) : 0, 0, hasFocus ? dp(2) : 0, Color.argb(180, 0, 0, 0));
             }
         });
@@ -1954,14 +2020,14 @@ public class MainActivity extends Activity {
     }
 
     private GradientDrawable buildIconCardBackground(int baseColor) {
-        int start = adjustColor(baseColor, 1.22f);
-        int end = adjustColor(baseColor, 0.92f);
+        int start = adjustColor(baseColor, 1.28f);
+        int end = adjustColor(baseColor, 0.88f);
         if (isLowSaturation(baseColor)) {
-            start = Color.rgb(238, 244, 251);
-            end = Color.rgb(213, 228, 246);
+            start = Color.rgb(245, 248, 252);
+            end = Color.rgb(220, 235, 250);
         }
-        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, new int[]{start, end});
-        bg.setCornerRadius(dp(12));
+        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TOP_LEFT, new int[]{start, end});
+        bg.setCornerRadius(dp(16));
         return bg;
     }
 
@@ -2184,7 +2250,7 @@ public class MainActivity extends Activity {
     private TextView createActionButton(AppAction action, Dialog dialog) {
         TextView button = new TextView(this);
         button.setText(action.title + "\n" + action.subtitle);
-        button.setTextSize(16);
+        button.setTextSize(17);
         button.setTypeface(Typeface.DEFAULT_BOLD);
         button.setGravity(Gravity.CENTER_VERTICAL);
         button.setPadding(dp(18), 0, dp(14), 0);
@@ -2207,20 +2273,20 @@ public class MainActivity extends Activity {
 
     private GradientDrawable actionPanelBackground() {
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(Color.argb(235, 28, 28, 28));
-        bg.setCornerRadius(dp(28));
-        bg.setStroke(dp(1), Color.argb(90, 255, 255, 255));
+        bg.setColor(Color.argb(240, 22, 28, 40));
+        bg.setCornerRadius(dp(32));
+        bg.setStroke(dp(1), Color.argb(100, 255, 255, 255));
         return bg;
     }
 
     private GradientDrawable actionButtonBackground(boolean focused, boolean danger) {
         GradientDrawable bg = new GradientDrawable();
-        int color = focused ? Color.argb(245, 255, 255, 255)
-                : (danger ? Color.argb(155, 86, 38, 38) : Color.argb(175, 68, 68, 68));
+        int color = focused ? Color.argb(250, 255, 255, 255)
+                : (danger ? Color.argb(160, 120, 40, 40) : Color.argb(185, 50, 60, 80));
         bg.setColor(color);
-        bg.setCornerRadius(dp(16));
+        bg.setCornerRadius(dp(18));
         bg.setStroke(focused ? dp(3) : dp(1),
-                focused ? Color.WHITE : Color.argb(42, 255, 255, 255));
+                focused ? Color.WHITE : Color.argb(50, 255, 255, 255));
         return bg;
     }
 
@@ -2263,7 +2329,7 @@ public class MainActivity extends Activity {
         overlay.setFocusableInTouchMode(true);
         overlay.setClickable(true);
         overlay.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
-        overlay.setBackgroundColor(Color.argb(170, 226, 238, 236));
+        overlay.setBackgroundColor(Color.argb(190, 8, 12, 20));
         overlay.setOnClickListener(v -> dialog.dismiss());
         overlay.setOnKeyListener((v, keyCode, event) -> {
             if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_BACK) {
@@ -2280,15 +2346,15 @@ public class MainActivity extends Activity {
         panel.setClipChildren(false);
         panel.setClipToPadding(false);
         GradientDrawable panelBg = new GradientDrawable();
-        panelBg.setColor(Color.argb(184, 246, 248, 247));
-        panelBg.setCornerRadius(dp(22));
-        panelBg.setStroke(dp(1), Color.argb(170, 255, 255, 255));
+        panelBg.setColor(Color.argb(225, 24, 32, 48));
+        panelBg.setCornerRadius(dp(26));
+        panelBg.setStroke(dp(1), Color.argb(90, 255, 255, 255));
         panel.setBackground(panelBg);
-        panel.setElevation(dp(10));
+        panel.setElevation(dp(12));
 
         TextView title = new TextView(this);
         title.setText(folder.label);
-        title.setTextColor(Color.rgb(76, 72, 84));
+        title.setTextColor(Color.argb(240, 230, 220, 210));
         title.setTextSize(24);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setGravity(Gravity.CENTER);
@@ -2615,14 +2681,14 @@ public class MainActivity extends Activity {
     }
 
     private GradientDrawable buildMiniIconCardBackground(int baseColor) {
-        int start = adjustColor(baseColor, 1.22f);
-        int end = adjustColor(baseColor, 0.92f);
+        int start = adjustColor(baseColor, 1.28f);
+        int end = adjustColor(baseColor, 0.88f);
         if (isLowSaturation(baseColor)) {
-            start = Color.rgb(238, 244, 251);
-            end = Color.rgb(213, 228, 246);
+            start = Color.rgb(245, 248, 252);
+            end = Color.rgb(220, 235, 250);
         }
-        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, new int[]{start, end});
-        bg.setCornerRadius(dp(4));
+        GradientDrawable bg = new GradientDrawable(GradientDrawable.Orientation.TOP_LEFT, new int[]{start, end});
+        bg.setCornerRadius(dp(6));
         return bg;
     }
 
@@ -2888,15 +2954,40 @@ public class MainActivity extends Activity {
     }
 
     private boolean moveFocusedTileByDelta(View focusedCard, String packageName, int delta) {
-        if (appsGrid == null) return true;
+        if (appsFlow == null) return true;
         View cell = (View) focusedCard.getParent();
-        int from = appsGrid.indexOfChild(cell);
-        int to = Math.max(0, Math.min(appsGrid.getChildCount() - 1, from + delta));
-        if (from < 0 || from == to) return true;
+        // 找到 cell 所在的 row
+        int fromRowIdx = -1, fromInRow = -1, toInRow = -1;
+        List<View> allTiles = new ArrayList<>();
+        for (int r = 0; r < appsFlow.getChildCount(); r++) {
+            View row = appsFlow.getChildAt(r);
+            if (!(row instanceof LinearLayout)) continue;
+            LinearLayout llRow = (LinearLayout) row;
+            for (int c = 0; c < llRow.getChildCount(); c++) {
+                allTiles.add(llRow.getChildAt(c));
+                if (llRow.getChildAt(c) == cell) {
+                    fromRowIdx = r;
+                    fromInRow = c;
+                }
+            }
+        }
+        if (fromRowIdx < 0) return true;
+
+        int total = allTiles.size();
+        int fromGlobal = allTiles.indexOf(cell);
+        int toGlobal = Math.max(0, Math.min(total - 1, fromGlobal + delta));
+        if (fromGlobal == toGlobal) return true;
+
+        // 获取目标位置和所在行
+        int targetRowIndex = toGlobal / appsPerRow();
+        View toRowView = appsFlow.getChildAt(targetRowIndex);
+        LinearLayout toRow = (LinearLayout) toRowView;
+        toInRow = toGlobal % appsPerRow();
 
         moveAppByDelta(packageName, delta);
-        appsGrid.removeViewAt(from);
-        appsGrid.addView(cell, to);
+        appsFlow.removeView(cell);
+        toRow.addView(cell, toInRow);
+
         cell.post(() -> {
             if (cell instanceof LinearLayout && ((LinearLayout) cell).getChildCount() > 0) {
                 View card = ((LinearLayout) cell).getChildAt(0);
@@ -2967,8 +3058,8 @@ public class MainActivity extends Activity {
         chip.setGravity(Gravity.CENTER);
         chip.setFocusable(true);
         chip.setClickable(true);
-        chip.setTextSize(primary ? 19 : 16);
-        chip.setTextColor(primary ? Color.rgb(18, 18, 18) : Color.WHITE);
+        chip.setTextSize(primary ? 20 : 17);
+        chip.setTextColor(primary ? Color.argb(255, 20, 20, 20) : Color.argb(255, 255, 255, 255));
         chip.setTypeface(primary ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
         chip.setBackgroundResource(primary ? R.drawable.light_chip : R.drawable.glass_chip);
         chip.setOnFocusChangeListener((v, hasFocus) -> animateFocus(v, hasFocus, 1.06f));
@@ -3066,12 +3157,12 @@ public class MainActivity extends Activity {
     private void addHeading(LinearLayout options, String text) {
         TextView heading = new TextView(this);
         heading.setText(text);
-        heading.setTextColor(Color.WHITE);
-        heading.setTextSize(24);
+        heading.setTextColor(Color.argb(255, 255, 255, 255));
+        heading.setTextSize(25);
         heading.setTypeface(Typeface.DEFAULT_BOLD);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, -2);
-        lp.topMargin = dp(22);
-        lp.bottomMargin = dp(14);
+        lp.topMargin = dp(24);
+        lp.bottomMargin = dp(16);
         options.addView(heading, lp);
     }
 
@@ -3093,8 +3184,8 @@ public class MainActivity extends Activity {
 
         TextView titleView = new TextView(this);
         titleView.setText(title);
-        titleView.setTextColor(Color.WHITE);
-        titleView.setTextSize(21);
+        titleView.setTextColor(Color.argb(250, 255, 255, 255));
+        titleView.setTextSize(22);
         titleView.setTypeface(Typeface.DEFAULT_BOLD);
         titleView.setSingleLine(true);
         titleView.setEllipsize(TextUtils.TruncateAt.END);
@@ -3103,8 +3194,8 @@ public class MainActivity extends Activity {
         if (!TextUtils.isEmpty(subtitle)) {
             TextView sub = new TextView(this);
             sub.setText(subtitle);
-            sub.setTextColor(Color.argb(170, 255, 255, 255));
-            sub.setTextSize(13);
+            sub.setTextColor(Color.argb(185, 255, 255, 255));
+            sub.setTextSize(14);
             sub.setSingleLine(true);
             sub.setEllipsize(TextUtils.TruncateAt.END);
             texts.addView(sub);
@@ -3112,10 +3203,10 @@ public class MainActivity extends Activity {
 
         TextView check = new TextView(this);
         check.setText(checked ? String.valueOf((char) 0x2713) : "");
-        check.setTextColor(Color.WHITE);
-        check.setTextSize(26);
+        check.setTextColor(Color.argb(250, 255, 255, 255));
+        check.setTextSize(28);
         check.setGravity(Gravity.CENTER);
-        row.addView(check, new LinearLayout.LayoutParams(dp(58), -1));
+        row.addView(check, new LinearLayout.LayoutParams(dp(62), -1));
 
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(TextUtils.isEmpty(subtitle) ? 58 : 72));
         lp.bottomMargin = dp(12);
@@ -3332,30 +3423,33 @@ public class MainActivity extends Activity {
 
     private List<GradientPreset> gradientPresets() {
         List<GradientPreset> items = new ArrayList<>();
-        items.add(new GradientPreset("emerald_night", "Emerald Night", false, "#102B24", "#185E4C", "#6BD08D"));
-        items.add(new GradientPreset("ocean_blue", "Ocean Blue", false, "#0C2B5E", "#1D79D8", "#7FD9FF"));
-        items.add(new GradientPreset("midnight_purple", "Midnight Purple", false, "#17132F", "#4B2B84", "#A765FF"));
-        items.add(new GradientPreset("sunset_orange", "Sunset Orange", false, "#32170E", "#E75E35", "#FFD37A"));
-        items.add(new GradientPreset("aurora_green", "Aurora Green", false, "#062819", "#35B978", "#B5F37D"));
-        items.add(new GradientPreset("deep_space", "Deep Space", false, "#050816", "#132B54", "#6D4BD8"));
-        items.add(new GradientPreset("rose_night", "Rose Night", false, "#27101A", "#8D3159", "#F08AB5"));
-        items.add(new GradientPreset("cyber_blue", "Cyber Blue", false, "#061B2F", "#0877B8", "#4FF3E8"));
-        items.add(new GradientPreset("forest_mist", "Forest Mist", true, "#173522", "#5B8C63", "#C7E5C2"));
-        items.add(new GradientPreset("black_gold", "Black Gold", false, "#090806", "#53431C", "#F2C64E"));
-        items.add(new GradientPreset("arctic_blue", "Arctic Blue", true, "#0D3556", "#83C8E8", "#F4FCFF"));
-        items.add(new GradientPreset("lavender_dream", "Lavender Dream", false, "#282045", "#8B79D9", "#F0D6FF"));
-        items.add(new GradientPreset("teal_shadow", "Teal Shadow", false, "#08272B", "#1E8085", "#85E0D8"));
-        items.add(new GradientPreset("crimson_night", "Crimson Night", false, "#240909", "#8F1C28", "#F06666"));
-        items.add(new GradientPreset("indigo_glow", "Indigo Glow", false, "#10163D", "#395BE7", "#86C4FF"));
-        items.add(new GradientPreset("bronze_dark", "Bronze Dark", false, "#20120B", "#8C5732", "#DFA66B"));
-        items.add(new GradientPreset("sky_horizon", "Sky Horizon", true, "#215A93", "#B9E4FF", "#F5D497"));
-        items.add(new GradientPreset("mint_glass", "Mint Glass", false, "#163B39", "#80D5BB", "#E8FFF5"));
-        items.add(new GradientPreset("volcano", "Volcano", false, "#1B0804", "#B52A19", "#FFAB40"));
-        items.add(new GradientPreset("moonlight", "Moonlight", true, "#0B1020", "#354C6F", "#C6D4EF"));
-        items.add(new GradientPreset("tropical_sea", "Tropical Sea", false, "#063E4B", "#13B5A7", "#B6F78E"));
-        items.add(new GradientPreset("graphite", "Graphite", false, "#111111", "#3B4650", "#9BA8B4"));
-        items.add(new GradientPreset("neon_purple", "Neon Purple", false, "#16072C", "#9C27FF", "#00D5FF"));
-        items.add(new GradientPreset("deep_emerald", "Deep Emerald", false, "#041B16", "#0E5A49", "#2DE0A5"));
+        items.add(new GradientPreset("emerald_night", "Emerald Night", false, "#0A1F18", "#1A5E4A", "#2DD4A0"));
+        items.add(new GradientPreset("ocean_blue", "Ocean Blue", false, "#081838", "#1A5AD8", "#6DD4FF"));
+        items.add(new GradientPreset("midnight_purple", "Midnight Purple", false, "#0E0A20", "#3E2088", "#A050FF"));
+        items.add(new GradientPreset("sunset_orange", "Sunset Orange", false, "#2A1008", "#D85020", "#FFC860"));
+        items.add(new GradientPreset("aurora_green", "Aurora Green", false, "#04180E", "#2AA868", "#9EE860"));
+        items.add(new GradientPreset("deep_space", "Deep Space", false, "#030610", "#0E2048", "#5838D0"));
+        items.add(new GradientPreset("rose_night", "Rose Night", false, "#1E0812", "#782048", "#E870A0"));
+        items.add(new GradientPreset("cyber_blue", "Cyber Blue", false, "#041018", "#0668A8", "#38E0D8"));
+        items.add(new GradientPreset("forest_mist", "Forest Mist", true, "#0E1E14", "#3A7848", "#A8D8A0"));
+        items.add(new GradientPreset("black_gold", "Black Gold", false, "#060402", "#483808", "#E0A828"));
+        items.add(new GradientPreset("arctic_blue", "Arctic Blue", true, "#081830", "#58A8D0", "#E0F4FF"));
+        items.add(new GradientPreset("lavender_dream", "Lavender Dream", false, "#1C1430", "#7060D0", "#E0B8FF"));
+        items.add(new GradientPreset("teal_shadow", "Teal Shadow", false, "#06181C", "#18686C", "#70D0C8"));
+        items.add(new GradientPreset("crimson_night", "Crimson Night", false, "#180606", "#781820", "#E05058"));
+        items.add(new GradientPreset("indigo_glow", "Indigo Glow", false, "#080C28", "#2848D0", "#70A8FF"));
+        items.add(new GradientPreset("bronze_dark", "Bronze Dark", false, "#160C08", "#784018", "#C89050"));
+        items.add(new GradientPreset("sky_horizon", "Sky Horizon", true, "#183868", "#98C8FF", "#F0D890"));
+        items.add(new GradientPreset("mint_glass", "Mint Glass", false, "#0E2824", "#58C0A0", "#D0F8E8"));
+        items.add(new GradientPreset("volcano", "Volcano", false, "#120400", "#982008", "#E89028"));
+        items.add(new GradientPreset("moonlight", "Moonlight", true, "#060810", "#203858", "#A0B8D8"));
+        items.add(new GradientPreset("tropical_sea", "Tropical Sea", false, "#042830", "#0FA090", "#98E868"));
+        items.add(new GradientPreset("graphite", "Graphite", false, "#080808", "#283038", "#8898A8"));
+        items.add(new GradientPreset("neon_purple", "Neon Purple", false, "#0E0418", "#7818D8", "#00C0E8"));
+        items.add(new GradientPreset("deep_emerald", "Deep Emerald", false, "#020E0C", "#084838", "#20B880"));
+        items.add(new GradientPreset("twilight_violet", "Twilight Violet", false, "#120828", "#481898", "#C080FF"));
+        items.add(new GradientPreset("dawn_coral", "Dawn Coral", false, "#280808", "#D85838", "#FFB890"));
+        items.add(new GradientPreset("arctic_frost", "Arctic Frost", true, "#081828", "#40A0D0", "#D8F0FF"));
         return items;
     }
 
@@ -3730,7 +3824,7 @@ public class MainActivity extends Activity {
     }
 
     private void animateFocus(View v, boolean hasFocus, float scale) {
-        v.animate().scaleX(hasFocus ? scale : 1f).scaleY(hasFocus ? scale : 1f).translationZ(hasFocus ? dp(12) : 0).setDuration(100).start();
+        v.animate().scaleX(hasFocus ? scale : 1f).scaleY(hasFocus ? scale : 1f).translationZ(hasFocus ? dp(16) : 0).setDuration(120).start();
     }
 
     private void startHomeMoveWiggle(View card, String packageName) {

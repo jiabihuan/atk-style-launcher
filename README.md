@@ -1,19 +1,21 @@
 # MyTV Launcher
 
-MyTV Launcher is an open-source Android TV launcher inspired by ATK and Emotn-style home screens. It focuses on a clean TV-first home experience with local customization and no commercial activation flow.
+MyTV Launcher is an open-source Android TV launcher inspired by ATK, Emotn, and欢喜桌面-style home screens. It focuses on a refined TV-first home experience with premium glassmorphism design, local customization, and no commercial activation flow.
 
 ## Features
 
 - Android TV / Google TV launcher entry points
 - Leanback and standard app discovery
-- Weather card and weather detail screen
-- App folders
+- Premium glassmorphism UI with gradient-rich app cards
+- Animated weather card with animated weather detail screen (rain, snow, thunder, fog, sun)
+- App folders with preview grid
 - App hiding and manual sorting
 - Search dialog for installed apps
-- Wallpaper modes: built-in light/dark, local image, remote image URL, local video, and custom gradients
+- Wallpaper modes: built-in light/dark, local image, remote image URL, local video, and 25+ custom gradients
 - Appearance controls such as 24-hour clock, minimal status bar, and section visibility
 - Optional accessibility fallback for devices that do not allow third-party default Home apps
 - Boot/update/wake return options
+- Refined focus animations with elevated z-depth on selection
 
 ## Open-Source Scope
 
