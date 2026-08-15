@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@id/home_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_main">
+
+    <!-- 顶部导航栏 -->
+    <LinearLayout
+        android:id="@+id/top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="@dimen/padding_large"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tv_clock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--:--"
+            android:textColor="@color/text_primary"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/tv_greeting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="欢迎回来"
+            android:textColor="@color/text_secondary"
+            android:textSize="18sp"
+            android:layout_marginEnd="@dimen/padding_medium" />
+
+        <View
+            android:id="@+id/search_pill"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_search"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginStart="@dimen/padding_medium" />
+
+    </LinearLayout>
+
+    <!-- 应用瀑布流区域 -->
+    <ScrollView
+        android:id="@+id/apps_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="80dp"
+        android:layout_marginBottom="100dp"
+        android:padding="@dimen/padding_large"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:id="@+id/apps_flow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+    </ScrollView>
+
+    <!-- 底部 Dock 栏 -->
+    <LinearLayout
+        android:id="@+id/dock_container"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dock_height"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="@dimen/padding_medium"
+        android:background="@drawable/bg_dock">
+
+        <LinearLayout
+            android:id="@+id/dock_row"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center" />
+
+    </LinearLayout>
+
+</FrameLayout>

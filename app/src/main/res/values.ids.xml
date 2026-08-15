@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="home_root" type="id"/>
+    <item name="app_grid" type="id"/>
+    <item name="dock_row" type="id"/>
+    <item name="search_pill" type="id"/>
+</resources>

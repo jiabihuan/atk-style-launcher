@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 尺寸定义 -->
+    <dimen name="card_width">160dp</dimen>
+    <dimen name="card_height">90dp</dimen>
+    <dimen name="card_corner_radius">12dp</dimen>
+    <dimen name="card_margin">8dp</dimen>
+    <dimen name="dock_height">80dp</dimen>
+    <dimen name="dock_item_size">60dp</dimen>
+    <dimen name="focus_scale">1.08</dimen>
+    <dimen name="focus_translation_z">8dp</dimen>
+    <dimen name="shadow_elevation">4dp</dimen>
+    <dimen name="padding_small">8dp</dimen>
+    <dimen name="padding_medium">16dp</dimen>
+    <dimen name="padding_large">24dp</dimen>
+</resources>

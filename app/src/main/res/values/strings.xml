@@ -1,6 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">星河桌面</string>
-    <string name="accessibility_service_label">星河桌面无障碍服务</string>
-    <string name="accessibility_service_summary">当系统桌面出现时返回星河桌面的可选备用方案。</string>
-    <string name="accessibility_service_description">星河桌面无障碍服务是为不允许第三方默认桌面应用的 Google TV 设备提供的可选备用方案。它仅监听桌面窗口变化，当系统桌面出现时打开星河桌面。它不会读取屏幕内容、输入、点击、录制或收集个人数据。</string>
+    <string name="app_name">ATK Launcher</string>
+    <string name="accessibility_service_label">ATK Launcher 辅助服务</string>
+    <string name="accessibility_service_description">用于实现 TV 桌面导航和快捷键功能</string>
 </resources>
