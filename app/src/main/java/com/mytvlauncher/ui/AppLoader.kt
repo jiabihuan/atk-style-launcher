@@ -1,5 +1,6 @@
 package com.mytvlauncher.ui
 
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import com.mytvlauncher.model.AppEntry
