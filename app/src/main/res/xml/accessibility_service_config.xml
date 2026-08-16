@@ -5,6 +5,5 @@
     android:accessibilityFlags="flagRequestEnhancedWebAccessibility|flagReportViewIds"
     android:canRetrieveWindowContent="true"
     android:canPerformGestures="true"
-    android:description="@string/accessibility_service_description"
     android:notificationTimeout="100"
-    android:settingsActivity="com.mytvlauncher.ui.SettingsActivity" />
+    android:description="@string/accessibility_service_description" />
